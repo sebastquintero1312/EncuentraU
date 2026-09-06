@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EncuentraU - Buscar objetos</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="panel-ciudadano.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU</a>
+      <nav class="nav-links">
+        <a href="panel-ciudadano.html">Panel</a>
+        <a href="reportar-perdido.html">Reportar perdido</a>
+        <a href="reportar-encontrado.html">Reportar encontrado</a>
+        <a href="mis-reportes.html">Mis reportes</a>
+        <a href="buscar-objetos.html">Buscar objetos</a>
+        <a href="index.html">Cerrar sesión</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h2 class="titulo-seccion">Buscar objetos</h2>
+    <p class="subtitulo">Consulta todos los reportes de la universidad.</p>
+    <div class="aviso-simulado">La búsqueda filtra sobre datos simulados en el navegador, no consulta ningún servidor todavía.</div>
+
+    <div class="filtros">
+      <div class="form-group">
+        <label for="texto">Buscar por nombre</label>
+        <input type="text" id="texto" placeholder="Ej: mochila, celular...">
+      </div>
+      <div class="form-group">
+        <label for="tipo">Tipo</label>
+        <select id="tipo">
+          <option value="">Todos</option>
+          <option value="perdido">Perdido</option>
+          <option value="encontrado">Encontrado</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="categoria">Categoría</label>
+        <select id="categoria">
+          <option value="">Todas</option>
+          <option>Tecnología</option>
+          <option>Accesorios</option>
+          <option>Útiles</option>
+          <option>Documentos</option>
+          <option>Ropa</option>
+          <option>Otro</option>
+        </select>
+      </div>
+      <button id="btn-buscar" class="btn btn-primary">Buscar</button>
+    </div>
+
+    <div class="grid" id="resultados"></div>
+  </main>
+
+  <footer class="footer">
+    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
+  </footer>
+
+  <script src="js/datos-temporales.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    function pintarResultados(lista) {
+      const contenedor = document.getElementById('resultados');
+      contenedor.innerHTML = '';
+
+      if (lista.length === 0) {
+        contenedor.innerHTML = '<p>No se encontraron objetos con esos filtros.</p>';
+        return;
+      }
+
+      lista.forEach(reporte => {
+        const tarjeta = document.createElement('div');
+        tarjeta.className = 'card';
+        tarjeta.innerHTML = `
+          <h3>${reporte.objeto}</h3>
+          <p><span class="badge badge-${reporte.tipo}">${reporte.tipo}</span> · ${reporte.categoria}</p>
+          <p>${reporte.ubicacion} — ${reporte.fecha}</p>
+          <a class="btn btn-secondary btn-small" href="detalle-objeto.html?id=${reporte.id}">Ver detalle</a>
+        `;
+        contenedor.appendChild(tarjeta);
+      });
+    }
+
+    function buscar() {
+      const texto = document.getElementById('texto').value.trim().toLowerCase();
+      const tipo = document.getElementById('tipo').value;
+      const categoria = document.getElementById('categoria').value;
+
+      const resultado = reportesSimulados.filter(r => {
+        const coincideTexto = texto === '' || r.objeto.toLowerCase().includes(texto);
+        const coincideTipo = tipo === '' || r.tipo === tipo;
+        const coincideCategoria = categoria === '' || r.categoria === categoria;
+        return coincideTexto && coincideTipo && coincideCategoria;
+      });
+
+      pintarResultados(resultado);
+    }
+
+    document.getElementById('btn-buscar').addEventListener('click', buscar);
+
+    // Al cargar la página se muestran todos los reportes activos
+    pintarResultados(reportesSimulados);
+  </script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EncuentraU - Recuperar contraseña</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU</a>
+      <nav class="nav-links">
+        <a href="index.html">Inicio</a>
+        <a href="login.html">Iniciar sesión</a>
+        <a href="registro.html">Registrarse</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="form-card">
+      <img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-form">
+      <h2>Recuperar contraseña</h2>
+      <p class="subtitulo-form">Te enviaremos instrucciones a tu correo</p>
+
+      <form id="form-recuperar" novalidate>
+        <div class="form-group">
+          <label for="correo">Correo institucional</label>
+          <input type="email" id="correo">
+          <span class="mensaje-error"></span>
+        </div>
+        <button type="submit" class="btn btn-primary" id="btn-recuperar" style="width:100%">Enviar enlace de recuperación</button>
+      </form>
+
+      <div class="mensaje-confirmacion" id="mensaje-confirmacion"></div>
+
+      <div class="form-links">
+        <p><a href="restablecer-contrasena.html">¿Ya tienes un token? Restablece tu contraseña aquí</a></p>
+        <p><a href="login.html">Volver a iniciar sesión</a></p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
+  </footer>
+
+  <script src="js/validaciones.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById('form-recuperar').addEventListener('submit', async function (evento) {
+      evento.preventDefault();
+
+      const correo = document.getElementById('correo');
+      const boton = document.getElementById('btn-recuperar');
+      const mensajeConfirmacion = document.getElementById('mensaje-confirmacion');
+      limpiarError(correo);
+      let valido = true;
+
+      if (campoVacio(correo.value)) {
+        mostrarError(correo, 'El correo es obligatorio');
+        valido = false;
+      } else if (!correoValido(correo.value)) {
+        mostrarError(correo, 'Ingresa un correo válido');
+        valido = false;
+      }
+
+      if (!valido) return;
+
+      boton.disabled = true;
+      boton.textContent = 'Enviando...';
+
+      try {
+        const resultado = await peticionSegura('/auth/recuperar', { correo: correo.value.trim() });
+        // Por seguridad, el backend SIEMPRE responde el mismo mensaje genérico,
+        // exista o no el correo. Así no se puede saber qué correos están registrados.
+        mensajeConfirmacion.textContent = resultado.datos.mensaje || 'Si el correo está registrado, recibirás instrucciones para continuar.';
+        mensajeConfirmacion.classList.add('visible');
+      } catch (error) {
+        mensajeConfirmacion.textContent = 'No se pudo conectar con el servidor. Verifica que el backend Flask esté corriendo.';
+        mensajeConfirmacion.classList.add('visible');
+      } finally {
+        boton.disabled = false;
+        boton.textContent = 'Enviar enlace de recuperación';
+      }
+    });
+  </script>
+</body>
+</html>

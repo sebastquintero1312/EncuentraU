@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EncuentraU - Detalle del objeto</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="panel-ciudadano.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU</a>
+      <nav class="nav-links">
+        <a href="panel-ciudadano.html">Panel</a>
+        <a href="reportar-perdido.html">Reportar perdido</a>
+        <a href="reportar-encontrado.html">Reportar encontrado</a>
+        <a href="mis-reportes.html">Mis reportes</a>
+        <a href="buscar-objetos.html">Buscar objetos</a>
+        <a href="index.html">Cerrar sesión</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="detalle-objeto" id="detalle">
+      <!-- Contenido llenado por JavaScript según el id en la URL -->
+      <p>Cargando...</p>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
+  </footer>
+
+  <script src="js/datos-temporales.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Leemos el id del objeto desde la URL, ej: detalle-objeto.html?id=2
+    const parametros = new URLSearchParams(window.location.search);
+    const id = Number(parametros.get('id'));
+    const reporte = reportesSimulados.find(r => r.id === id);
+
+    const contenedor = document.getElementById('detalle');
+
+    if (!reporte) {
+      contenedor.innerHTML = `
+        <p>No se encontró ningún reporte con ese id.</p>
+        <a class="btn btn-secondary" href="buscar-objetos.html">Volver a buscar</a>
+      `;
+    } else {
+      contenedor.innerHTML = `
+        <h2>${reporte.objeto}</h2>
+        <div class="estado-linea">
+          <span class="badge badge-${reporte.tipo}">${reporte.tipo}</span>
+          <span class="badge ${claseBadgeEstado(reporte.estado)}">${reporte.estado}</span>
+        </div>
+        <dl>
+          <dt>Categoría</dt>
+          <dd>${reporte.categoria}</dd>
+          <dt>Descripción</dt>
+          <dd>${reporte.descripcion}</dd>
+          <dt>Ubicación</dt>
+          <dd>${reporte.ubicacion}</dd>
+          <dt>Fecha</dt>
+          <dd>${reporte.fecha}</dd>
+          <dt>Reportado por</dt>
+          <dd>${reporte.usuarioNombre}</dd>
+        </dl>
+        <br>
+        <a class="btn btn-primary" href="solicitud-recuperacion.html?id=${reporte.id}">Solicitar recuperación</a>
+        <a class="btn btn-secondary" href="buscar-objetos.html">Volver a buscar</a>
+      `;
+    }
+  </script>
+</body>
+</html>

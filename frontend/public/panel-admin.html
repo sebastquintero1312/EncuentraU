@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EncuentraU - Panel del administrador</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="panel-admin.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU <span class="badge-admin">Admin</span></a>
+      <nav class="nav-links">
+        <a href="panel-admin.html">Panel</a>
+        <a href="gestion-reportes.html">Gestión de reportes</a>
+        <a href="gestion-usuarios.html">Gestión de usuarios</a>
+        <a href="index.html">Cerrar sesión</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h2 class="titulo-seccion">Panel de administración</h2>
+    <p class="subtitulo">Resumen general de la plataforma (datos simulados).</p>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="numero" id="total-reportes">0</div>
+        <div class="etiqueta">Reportes totales</div>
+      </div>
+      <div class="stat-card">
+        <div class="numero" id="reportes-activos">0</div>
+        <div class="etiqueta">Reportes activos</div>
+      </div>
+      <div class="stat-card">
+        <div class="numero" id="total-usuarios">0</div>
+        <div class="etiqueta">Usuarios registrados</div>
+      </div>
+      <div class="stat-card">
+        <div class="numero" id="solicitudes-pendientes">0</div>
+        <div class="etiqueta">Solicitudes pendientes</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Gestión de reportes</h3>
+        <p>Revisa, cambia el estado o elimina los reportes de objetos.</p>
+        <a href="gestion-reportes.html" class="btn btn-primary btn-small">Ir a reportes</a>
+      </div>
+      <div class="card">
+        <h3>Gestión de usuarios</h3>
+        <p>Consulta los usuarios registrados y administra sus roles.</p>
+        <a href="gestion-usuarios.html" class="btn btn-primary btn-small">Ir a usuarios</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
+  </footer>
+
+  <script src="js/datos-temporales.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById('total-reportes').textContent = reportesSimulados.length;
+    document.getElementById('reportes-activos').textContent =
+      reportesSimulados.filter(r => r.estado === 'activo').length;
+    document.getElementById('total-usuarios').textContent = usuariosSimulados.length;
+    document.getElementById('solicitudes-pendientes').textContent =
+      solicitudesSimuladas.filter(s => s.estado === 'pendiente').length;
+  </script>
+</body>
+</html>

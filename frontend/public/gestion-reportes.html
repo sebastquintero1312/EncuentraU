@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EncuentraU - Gestión de reportes</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="panel-admin.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU <span class="badge-admin">Admin</span></a>
+      <nav class="nav-links">
+        <a href="panel-admin.html">Panel</a>
+        <a href="gestion-reportes.html">Gestión de reportes</a>
+        <a href="gestion-usuarios.html">Gestión de usuarios</a>
+        <a href="index.html">Cerrar sesión</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h2 class="titulo-seccion">Gestión de reportes</h2>
+    <p class="subtitulo">Cambia el estado o elimina un reporte.</p>
+    <div class="aviso-simulado">Los cambios que hagas aquí solo existen en memoria del navegador; se pierden al recargar la página.</div>
+
+    <div class="tabla-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Objeto</th>
+            <th>Tipo</th>
+            <th>Usuario</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpo-tabla"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
+  </footer>
+
+  <script src="js/datos-temporales.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    const estadosPosibles = ['activo', 'en proceso', 'resuelto', 'cerrado'];
+
+    function dibujarTabla() {
+      const cuerpoTabla = document.getElementById('cuerpo-tabla');
+      cuerpoTabla.innerHTML = '';
+
+      if (reportesSimulados.length === 0) {
+        cuerpoTabla.innerHTML = '<tr><td colspan="5">No hay reportes.</td></tr>';
+        return;
+      }
+
+      reportesSimulados.forEach(reporte => {
+        const opciones = estadosPosibles
+          .map(estado => `<option value="${estado}" ${estado === reporte.estado ? 'selected' : ''}>${estado}</option>`)
+          .join('');
+
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+          <td>${reporte.objeto}</td>
+          <td><span class="badge badge-${reporte.tipo}">${reporte.tipo}</span></td>
+          <td>${reporte.usuarioNombre}</td>
+          <td><select data-id="${reporte.id}" class="selector-estado">${opciones}</select></td>
+          <td><button class="btn btn-danger btn-small" data-id="${reporte.id}">Eliminar</button></td>
+        `;
+        cuerpoTabla.appendChild(fila);
+      });
+
+      // Cambiar estado (solo en memoria, no se guarda en ningún servidor)
+      document.querySelectorAll('.selector-estado').forEach(select => {
+        select.addEventListener('change', function () {
+          const id = Number(this.dataset.id);
+          const reporte = reportesSimulados.find(r => r.id === id);
+          if (reporte) reporte.estado = this.value;
+        });
+      });
+
+      // Eliminar reporte (solo en memoria)
+      document.querySelectorAll('button.btn-danger').forEach(boton => {
+        boton.addEventListener('click', function () {
+          const id = Number(this.dataset.id);
+          const confirmado = confirm('¿Eliminar este reporte? Esta acción es solo visual.');
+          if (!confirmado) return;
+          const indice = reportesSimulados.findIndex(r => r.id === id);
+          if (indice !== -1) reportesSimulados.splice(indice, 1);
+          dibujarTabla();
+        });
+      });
+    }
+
+    dibujarTabla();
+  </script>
+</body>
+</html>

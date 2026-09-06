@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EncuentraU - Iniciar sesión</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU</a>
+      <nav class="nav-links">
+        <a href="index.html">Inicio</a>
+        <a href="login.html">Iniciar sesión</a>
+        <a href="registro.html">Registrarse</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="form-card">
+      <img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-form">
+      <h2>Iniciar sesión</h2>
+      <p class="subtitulo-form">Entra con tu correo institucional</p>
+
+      <div class="mensaje-general-error" id="mensaje-general-error"></div>
+
+      <form id="form-login" novalidate>
+        <div class="form-group">
+          <label for="correo">Correo institucional</label>
+          <input type="email" id="correo" name="correo" autocomplete="username">
+          <span class="mensaje-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="contrasena">Contraseña</label>
+          <div class="campo-password">
+            <input type="password" id="contrasena" name="contrasena" autocomplete="current-password">
+            <button type="button" class="btn-mostrar-password" id="btn-mostrar-contrasena">Mostrar</button>
+          </div>
+          <span class="mensaje-error"></span>
+        </div>
+        <button type="submit" class="btn btn-primary" id="btn-login" style="width:100%">Iniciar sesión</button>
+      </form>
+
+      <div class="form-links">
+        <p><a href="recuperar-contrasena.html">¿Olvidaste tu contraseña?</a></p>
+        <p>¿No tienes cuenta? <a href="registro.html">Regístrate</a></p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
+  </footer>
+
+  <script src="js/validaciones.js"></script>
+  <script src="js/contrasena-fortaleza.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    activarMostrarPassword('btn-mostrar-contrasena', 'contrasena');
+
+    document.getElementById('form-login').addEventListener('submit', async function (evento) {
+      evento.preventDefault();
+
+      const correo = document.getElementById('correo');
+      const contrasena = document.getElementById('contrasena');
+      const mensajeGeneral = document.getElementById('mensaje-general-error');
+      const boton = document.getElementById('btn-login');
+      let valido = true;
+
+      limpiarError(correo);
+      limpiarError(contrasena);
+      mensajeGeneral.classList.remove('visible');
+
+      if (campoVacio(correo.value)) {
+        mostrarError(correo, 'El correo es obligatorio');
+        valido = false;
+      } else if (!correoValido(correo.value)) {
+        mostrarError(correo, 'Ingresa un correo válido');
+        valido = false;
+      }
+
+      if (campoVacio(contrasena.value)) {
+        mostrarError(contrasena, 'La contraseña es obligatoria');
+        valido = false;
+      }
+
+      if (!valido) return;
+
+      boton.disabled = true;
+      boton.textContent = 'Ingresando...';
+
+      try {
+        const resultado = await peticionSegura('/auth/login', {
+          correo: correo.value.trim(),
+          contrasena: contrasena.value,
+        });
+
+        if (resultado.ok) {
+          window.location.href = 'panel-ciudadano.html';
+        } else {
+          mensajeGeneral.textContent = resultado.datos.mensaje || 'No fue posible iniciar sesión';
+          mensajeGeneral.classList.add('visible');
+        }
+      } catch (error) {
+        mensajeGeneral.textContent = 'No se pudo conectar con el servidor. Verifica que el backend Flask esté corriendo.';
+        mensajeGeneral.classList.add('visible');
+      } finally {
+        boton.disabled = false;
+        boton.textContent = 'Iniciar sesión';
+      }
+    });
+  </script>
+</body>
+</html>

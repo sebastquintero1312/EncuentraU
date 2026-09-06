@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EncuentraU - Reportar objeto perdido</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="panel-ciudadano.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU</a>
+      <nav class="nav-links">
+        <a href="panel-ciudadano.html">Panel</a>
+        <a href="reportar-perdido.html">Reportar perdido</a>
+        <a href="reportar-encontrado.html">Reportar encontrado</a>
+        <a href="mis-reportes.html">Mis reportes</a>
+        <a href="buscar-objetos.html">Buscar objetos</a>
+        <a href="index.html">Cerrar sesión</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="form-card ancho">
+      <h2>Reportar objeto perdido</h2>
+      <div class="aviso-simulado">Este formulario todavía no guarda el reporte en ningún lado, solo se muestra un mensaje de confirmación.</div>
+
+      <form id="form-perdido" novalidate>
+        <div class="form-group">
+          <label for="nombreObjeto">Nombre del objeto</label>
+          <input type="text" id="nombreObjeto" placeholder="Ej: Mochila azul">
+          <span class="mensaje-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="categoria">Categoría</label>
+          <select id="categoria">
+            <option value="">Selecciona una categoría</option>
+            <option>Tecnología</option>
+            <option>Accesorios</option>
+            <option>Útiles</option>
+            <option>Documentos</option>
+            <option>Ropa</option>
+            <option>Otro</option>
+          </select>
+          <span class="mensaje-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="descripcion">Descripción</label>
+          <textarea id="descripcion" rows="4" placeholder="Describe el objeto con el mayor detalle posible"></textarea>
+          <span class="mensaje-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="ubicacion">Lugar donde lo perdiste</label>
+          <input type="text" id="ubicacion" placeholder="Ej: Biblioteca central">
+          <span class="mensaje-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="fecha">Fecha aproximada</label>
+          <input type="date" id="fecha">
+          <span class="mensaje-error"></span>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Enviar reporte</button>
+      </form>
+
+      <div class="mensaje-confirmacion" id="mensaje-confirmacion">
+        Tu reporte fue registrado (solo de forma visual, no se guardó en ninguna base de datos).
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
+  </footer>
+
+  <script src="js/validaciones.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById('form-perdido').addEventListener('submit', function (evento) {
+      evento.preventDefault();
+
+      const nombreObjeto = document.getElementById('nombreObjeto');
+      const categoria = document.getElementById('categoria');
+      const descripcion = document.getElementById('descripcion');
+      const ubicacion = document.getElementById('ubicacion');
+      const fecha = document.getElementById('fecha');
+      let valido = true;
+
+      [nombreObjeto, categoria, descripcion, ubicacion, fecha].forEach(limpiarError);
+
+      if (campoVacio(nombreObjeto.value)) {
+        mostrarError(nombreObjeto, 'El nombre del objeto es obligatorio');
+        valido = false;
+      }
+      if (campoVacio(categoria.value)) {
+        mostrarError(categoria, 'Selecciona una categoría');
+        valido = false;
+      }
+      if (campoVacio(descripcion.value)) {
+        mostrarError(descripcion, 'La descripción es obligatoria');
+        valido = false;
+      } else if (!longitudValida(descripcion.value, 10, 300)) {
+        mostrarError(descripcion, 'La descripción debe tener entre 10 y 300 caracteres');
+        valido = false;
+      }
+      if (campoVacio(ubicacion.value)) {
+        mostrarError(ubicacion, 'Indica dónde lo perdiste');
+        valido = false;
+      }
+      if (campoVacio(fecha.value)) {
+        mostrarError(fecha, 'Selecciona una fecha');
+        valido = false;
+      }
+
+      if (valido) {
+        document.getElementById('mensaje-confirmacion').classList.add('visible');
+        document.getElementById('form-perdido').reset();
+      }
+    });
+  </script>
+</body>
+</html>

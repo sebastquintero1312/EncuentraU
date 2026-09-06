@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EncuentraU - Mis reportes</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="panel-ciudadano.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU</a>
+      <nav class="nav-links">
+        <a href="panel-ciudadano.html">Panel</a>
+        <a href="reportar-perdido.html">Reportar perdido</a>
+        <a href="reportar-encontrado.html">Reportar encontrado</a>
+        <a href="mis-reportes.html">Mis reportes</a>
+        <a href="buscar-objetos.html">Buscar objetos</a>
+        <a href="index.html">Cerrar sesión</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h2 class="titulo-seccion">Mis reportes</h2>
+    <p class="subtitulo">Estos son los objetos que has reportado como perdidos o encontrados.</p>
+    <div class="aviso-simulado">La lista se arma con datos simulados (js/datos-temporales.js), no con una base de datos real.</div>
+
+    <div class="tabla-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Objeto</th>
+            <th>Tipo</th>
+            <th>Ubicación</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpo-tabla">
+          <!-- Las filas se llenan con JavaScript a partir de reportesSimulados -->
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
+  </footer>
+
+  <script src="js/datos-temporales.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    const misReportes = reportesSimulados.filter(r => r.usuarioId === usuarioActualId);
+    const cuerpoTabla = document.getElementById('cuerpo-tabla');
+
+    if (misReportes.length === 0) {
+      cuerpoTabla.innerHTML = '<tr><td colspan="6">Todavía no has creado ningún reporte.</td></tr>';
+    } else {
+      misReportes.forEach(reporte => {
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+          <td>${reporte.objeto}</td>
+          <td><span class="badge badge-${reporte.tipo}">${reporte.tipo}</span></td>
+          <td>${reporte.ubicacion}</td>
+          <td>${reporte.fecha}</td>
+          <td><span class="badge ${claseBadgeEstado(reporte.estado)}">${reporte.estado}</span></td>
+          <td><a class="btn btn-secondary btn-small" href="detalle-objeto.html?id=${reporte.id}">Ver detalle</a></td>
+        `;
+        cuerpoTabla.appendChild(fila);
+      });
+    }
+  </script>
+</body>
+</html>

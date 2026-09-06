@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EncuentraU - Registrarse</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU</a>
+      <nav class="nav-links">
+        <a href="index.html">Inicio</a>
+        <a href="login.html">Iniciar sesión</a>
+        <a href="registro.html">Registrarse</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="form-card ancho">
+      <img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-form">
+      <h2>Crear cuenta</h2>
+      <p class="subtitulo-form">Regístrate con tu correo institucional</p>
+
+      <div class="mensaje-general-error" id="mensaje-general-error"></div>
+
+      <form id="form-registro" novalidate>
+        <div class="form-group">
+          <label for="primerNombre">Primer nombre</label>
+          <input type="text" id="primerNombre">
+          <span class="mensaje-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="segundoNombre">Segundo nombre (opcional)</label>
+          <input type="text" id="segundoNombre">
+          <span class="mensaje-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="primerApellido">Primer apellido</label>
+          <input type="text" id="primerApellido">
+          <span class="mensaje-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="segundoApellido">Segundo apellido (opcional)</label>
+          <input type="text" id="segundoApellido">
+          <span class="mensaje-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="correo">Correo institucional</label>
+          <input type="email" id="correo" autocomplete="username">
+          <span class="mensaje-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="contrasena">Contraseña</label>
+          <div class="campo-password">
+            <input type="password" id="contrasena" autocomplete="new-password">
+            <button type="button" class="btn-mostrar-password" id="btn-mostrar-contrasena">Mostrar</button>
+          </div>
+          <div class="medidor-fortaleza"><div class="barra" id="barra-fortaleza"></div></div>
+          <span class="etiqueta-fortaleza" id="etiqueta-fortaleza"></span>
+          <ul class="lista-requisitos" id="lista-requisitos"></ul>
+          <span class="mensaje-error"></span>
+        </div>
+        <div class="form-group">
+          <label for="confirmar">Confirmar contraseña</label>
+          <div class="campo-password">
+            <input type="password" id="confirmar" autocomplete="new-password">
+            <button type="button" class="btn-mostrar-password" id="btn-mostrar-confirmar">Mostrar</button>
+          </div>
+          <span class="mensaje-error"></span>
+        </div>
+        <button type="submit" class="btn btn-primary" id="btn-registro" style="width:100%">Registrarme</button>
+      </form>
+
+      <div class="form-links">
+        <p>¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
+  </footer>
+
+  <script src="js/validaciones.js"></script>
+  <script src="js/contrasena-fortaleza.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    activarMostrarPassword('btn-mostrar-contrasena', 'contrasena');
+    activarMostrarPassword('btn-mostrar-confirmar', 'confirmar');
+    activarIndicadorContrasena(
+      document.getElementById('contrasena'),
+      'lista-requisitos', 'barra-fortaleza', 'etiqueta-fortaleza',
+      document.getElementById('correo'), document.getElementById('primerNombre')
+    );
+
+    document.getElementById('form-registro').addEventListener('submit', async function (evento) {
+      evento.preventDefault();
+
+      const primerNombre = document.getElementById('primerNombre');
+      const segundoNombre = document.getElementById('segundoNombre');
+      const primerApellido = document.getElementById('primerApellido');
+      const segundoApellido = document.getElementById('segundoApellido');
+      const correo = document.getElementById('correo');
+      const contrasena = document.getElementById('contrasena');
+      const confirmar = document.getElementById('confirmar');
+      const mensajeGeneral = document.getElementById('mensaje-general-error');
+      const boton = document.getElementById('btn-registro');
+      let valido = true;
+
+      [primerNombre, segundoNombre, primerApellido, segundoApellido, correo, contrasena, confirmar].forEach(limpiarError);
+      mensajeGeneral.classList.remove('visible');
+
+      if (campoVacio(primerNombre.value)) {
+        mostrarError(primerNombre, 'El primer nombre es obligatorio');
+        valido = false;
+      } else if (!longitudValida(primerNombre.value, 2, 40)) {
+        mostrarError(primerNombre, 'Debe tener entre 2 y 40 caracteres');
+        valido = false;
+      }
+
+      if (campoVacio(primerApellido.value)) {
+        mostrarError(primerApellido, 'El primer apellido es obligatorio');
+        valido = false;
+      } else if (!longitudValida(primerApellido.value, 2, 40)) {
+        mostrarError(primerApellido, 'Debe tener entre 2 y 40 caracteres');
+        valido = false;
+      }
+
+      if (campoVacio(correo.value)) {
+        mostrarError(correo, 'El correo es obligatorio');
+        valido = false;
+      } else if (!correoValido(correo.value)) {
+        mostrarError(correo, 'Ingresa un correo válido');
+        valido = false;
+      }
+
+      // Validación visual de la contraseña. La validación real y obligatoria la hace el backend.
+      const requisitos = evaluarContrasena(contrasena.value, correo.value, primerNombre.value);
+      const cumpleTodo = Object.values(requisitos).every(Boolean);
+      if (campoVacio(contrasena.value)) {
+        mostrarError(contrasena, 'La contraseña es obligatoria');
+        valido = false;
+      } else if (!cumpleTodo) {
+        mostrarError(contrasena, 'La contraseña no cumple todos los requisitos de arriba');
+        valido = false;
+      }
+
+      if (campoVacio(confirmar.value)) {
+        mostrarError(confirmar, 'Confirma tu contraseña');
+        valido = false;
+      } else if (confirmar.value !== contrasena.value) {
+        mostrarError(confirmar, 'Las contraseñas no coinciden');
+        valido = false;
+      }
+
+      if (!valido) return;
+
+      boton.disabled = true;
+      boton.textContent = 'Creando cuenta...';
+
+      try {
+        const resultado = await peticionSegura('/auth/registro', {
+          primer_nombre: primerNombre.value.trim(),
+          segundo_nombre: segundoNombre.value.trim(),
+          primer_apellido: primerApellido.value.trim(),
+          segundo_apellido: segundoApellido.value.trim(),
+          correo: correo.value.trim(),
+          contrasena: contrasena.value,
+          confirmar_contrasena: confirmar.value,
+        });
+
+        if (resultado.ok) {
+          window.location.href = 'login.html';
+        } else {
+          mensajeGeneral.textContent = resultado.datos.mensaje || 'No fue posible completar el registro';
+          mensajeGeneral.classList.add('visible');
+
+          // Si el backend devuelve errores por campo, los mostramos también ahí
+          const errores = resultado.datos.errores || {};
+          if (errores.correo) mostrarError(correo, errores.correo);
+          if (errores.primer_nombre) mostrarError(primerNombre, errores.primer_nombre);
+          if (errores.primer_apellido) mostrarError(primerApellido, errores.primer_apellido);
+          if (errores.confirmar_contrasena) mostrarError(confirmar, errores.confirmar_contrasena);
+          if (errores.contrasena) mostrarError(contrasena, Array.isArray(errores.contrasena) ? errores.contrasena[0] : errores.contrasena);
+        }
+      } catch (error) {
+        mensajeGeneral.textContent = 'No se pudo conectar con el servidor. Verifica que el backend Flask esté corriendo.';
+        mensajeGeneral.classList.add('visible');
+      } finally {
+        boton.disabled = false;
+        boton.textContent = 'Registrarme';
+      }
+    });
+  </script>
+</body>
+</html>
