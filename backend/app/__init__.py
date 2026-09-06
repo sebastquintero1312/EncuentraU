@@ -32,15 +32,15 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
 
-    # Solo se activa CORS "cross-origin" real si FRONTEND_ORIGIN se configuró
-    # explícitamente distinto del propio dominio (caso de desarrollo con dos
-    # servidores). En producción, frontend y API viven en el mismo origen y
-    # no hace falta CORS.
-    CORS(
-        app,
-        supports_credentials=True,
-        origins=[Config.FRONTEND_ORIGIN, 'http://localhost:5500', 'http://127.0.0.1:5500'],
-    )
+    # Frontend y API viven en el mismo origen (Flask sirve frontend/public),
+    # así que en producción no hace falta CORS cross-origin en absoluto. Los
+    # orígenes de desarrollo (segundo servidor en :5500) solo se agregan
+    # fuera de producción, para no dejar nunca un origen de localhost
+    # permitido en un despliegue real.
+    origenes_permitidos = [Config.FRONTEND_ORIGIN]
+    if not Config.ES_PRODUCCION:
+        origenes_permitidos += ['http://localhost:5500', 'http://127.0.0.1:5500']
+    CORS(app, supports_credentials=True, origins=origenes_permitidos)
 
     limiter.init_app(app)
     csrf.init_app(app)

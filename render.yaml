@@ -1,0 +1,40 @@
+# Blueprint de despliegue para Render.com (https://render.com).
+#
+# Elegido tras comparar Render, Railway y PythonAnywhere (ver docs/DEPLOYMENT.md,
+# sección "Por qué Render"): es el único de los tres con un plan gratuito
+# permanente (sin tarjeta de crédito) que incluye tanto un servicio web como
+# una base de datos PostgreSQL real, con HTTPS automático.
+#
+# Este archivo NO despliega nada por sí solo. Uso: conectar este repositorio
+# (en GitHub) a una cuenta de Render y elegir "New Blueprint" — Render lee
+# este archivo y crea el servicio web + la base de datos automáticamente.
+# Ver docs/DEPLOYMENT.md para los pasos exactos y qué requiere autorización
+# externa (cuenta de GitHub y de Render, que solo su propietario puede crear).
+
+databases:
+  - name: encuentrau-db
+    databaseName: encuentrau
+    plan: free
+
+services:
+  - type: web
+    name: encuentrau
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r backend/requirements.txt"
+    startCommand: "cd backend && flask db upgrade && gunicorn --workers 2 --bind 0.0.0.0:$PORT app:app"
+    healthCheckPath: /health
+    envVars:
+      - key: FLASK_APP
+        value: app.py
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: encuentrau-db
+          property: connectionString
+      # FRONTEND_ORIGIN no es necesaria en este despliegue: frontend y API
+      # se sirven desde el mismo servicio (mismo origen), así que no hay
+      # petición cross-origin real que proteger con CORS.
