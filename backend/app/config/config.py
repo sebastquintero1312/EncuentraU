@@ -48,6 +48,12 @@ class Config:
     RESULTADOS_POR_PAGINA_DEFECTO = 10
     RESULTADOS_POR_PAGINA_MAXIMO = 50
 
+    # --- Límite de tamaño de petición ---
+    # Sin esto, Flask acepta cuerpos de tamaño ilimitado (riesgo de agotar
+    # memoria con un solo POST). 1 MB es de sobra para los formularios de
+    # texto que maneja la API (no hay subida de archivos en v1.0).
+    MAX_CONTENT_LENGTH = 1 * 1024 * 1024
+
     @staticmethod
     def validar_configuracion_produccion():
         """Se llama al crear la app. Si estamos en producción con configuración
