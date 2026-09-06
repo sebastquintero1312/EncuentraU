@@ -5,7 +5,7 @@
    El backend usa cookies de sesión (HttpOnly), así que siempre mandamos
    credentials: 'include'. También manejamos el token CSRF: se pide una
    vez y se reenvía en el header X-CSRFToken en cada petición que cambia
-   datos (POST).
+   datos (POST/PUT/DELETE).
 
    IMPORTANTE: nada de esto guarda contraseñas ni tokens sensibles en
    localStorage/sessionStorage. El token CSRF se guarda solo en una
@@ -13,7 +13,10 @@
    (y se vuelve a pedir automáticamente).
 */
 
-const API_BASE = 'http://127.0.0.1:5000/api';
+// Ruta relativa: el frontend se sirve desde el mismo origen que la API
+// (Flask sirve frontend/public como estático), así que no hace falta un
+// dominio absoluto ni CORS en producción.
+const API_BASE = '/api';
 
 let csrfTokenEnMemoria = null;
 
@@ -27,30 +30,45 @@ async function obtenerCsrfToken() {
   return csrfTokenEnMemoria;
 }
 
-async function peticionSegura(ruta, cuerpo) {
+function _actualizarCsrfSiVieneEnLaRespuesta(datos) {
+  // Login y logout limpian la sesión del servidor (anti session-fixation),
+  // lo que invalida el token CSRF que teníamos en memoria. El backend manda
+  // uno nuevo en la respuesta cuando eso pasa.
+  if (datos && datos.csrf_token) {
+    csrfTokenEnMemoria = datos.csrf_token;
+  }
+}
+
+// Petición GET simple, sin CSRF (las lecturas no lo necesitan).
+async function peticionGet(ruta) {
+  const respuesta = await fetch(`${API_BASE}${ruta}`, { credentials: 'include' });
+  const datos = await respuesta.json().catch(() => ({}));
+  return { ok: respuesta.ok, status: respuesta.status, datos };
+}
+
+// Petición que modifica datos (POST/PUT/DELETE): siempre lleva CSRF.
+async function peticionProtegida(ruta, metodo, cuerpo) {
   if (!csrfTokenEnMemoria) {
     await obtenerCsrfToken();
   }
 
-  const respuesta = await fetch(`${API_BASE}${ruta}`, {
-    method: 'POST',
+  const opciones = {
+    method: metodo,
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': csrfTokenEnMemoria,
-    },
-    body: JSON.stringify(cuerpo),
-  });
-
-  const datos = await respuesta.json().catch(() => ({}));
-
-  // Login y logout limpian la sesión del servidor (anti session-fixation),
-  // lo que invalida el token CSRF que teníamos en memoria. El backend manda
-  // uno nuevo en la respuesta cuando eso pasa; lo actualizamos aquí para que
-  // la siguiente petición protegida no falle.
-  if (datos && datos.csrf_token) {
-    csrfTokenEnMemoria = datos.csrf_token;
+    headers: { 'X-CSRFToken': csrfTokenEnMemoria },
+  };
+  if (cuerpo !== undefined) {
+    opciones.headers['Content-Type'] = 'application/json';
+    opciones.body = JSON.stringify(cuerpo);
   }
 
+  const respuesta = await fetch(`${API_BASE}${ruta}`, opciones);
+  const datos = await respuesta.json().catch(() => ({}));
+  _actualizarCsrfSiVieneEnLaRespuesta(datos);
   return { ok: respuesta.ok, status: respuesta.status, datos };
+}
+
+// Alias histórico: POST protegido (login, registro, recuperar, restablecer lo usan así).
+function peticionSegura(ruta, cuerpo) {
+  return peticionProtegida(ruta, 'POST', cuerpo);
 }

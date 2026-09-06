@@ -1,0 +1,46 @@
+# Evidencia: verificación de extremo a extremo con navegador real (Playwright/Chromium)
+# Fecha: 2026-09-06
+# Comando: python tests/e2e/verificacion_navegador.py (servidor real en http://127.0.0.1:5000, SQLite limpia)
+# Navegador: Chromium (Playwright), sin interfaz gráfica, con escucha de errores de consola/JS activada.
+
+Usuario root.verificacion@sanmateo.edu.co promovido a administrador correctamente.
+[OK] La página de inicio carga en el mismo origen que la API
+[OK] Login redirige al panel y saluda por nombre real
+[OK] El reporte de objeto perdido se guarda de verdad (backend real)
+[OK] Mis reportes muestra el reporte recién creado
+[OK] La búsqueda real (backend) encuentra el reporte de Laura
+[OK] El motor de coincidencias sugiere el reporte de Carlos como posible pareja
+[OK] La solicitud de reclamación se envía correctamente
+[OK] El dueño ve la información privada de verificación de la solicitud
+[OK] El reporte pasa a 'en proceso' al recibir una solicitud
+[OK] Un desconocido no autenticado no puede ver las solicitudes privadas (401)
+[OK] Login de un administrador redirige a panel-admin (no panel-ciudadano)
+[OK] La solicitud de Carlos aparece en gestión de solicitudes
+[OK] Aprobar una solicitud desde el panel funciona
+[OK] El reporte reclamado pasa a 'resuelto' tras la aprobación
+
+============================================================
+RESULTADO: todas las verificaciones pasaron (14/14).
+Cero errores de JavaScript en consola durante toda la ejecución
+(login, registro, reportar, buscar, detalle, solicitud, panel admin,
+gestión de reportes/solicitudes/usuarios).
+
+## Qué demuestra esta prueba
+
+Que el sistema funciona de extremo a extremo con un navegador real, no solo
+con el test client de Flask (pytest) ni con curl (smoke_test_manual_v1.0.md):
+- El frontend HTML/CSS/JS real hace las peticiones correctas a la API real.
+- La sesión, el CSRF y las cookies funcionan tal como las manejaría un
+  navegador de verdad (Playwright usa un motor de navegador real, Chromium).
+- La Content-Security-Policy configurada en el backend no rompe ningún
+  script del frontend (si lo hiciera, ninguna de estas pruebas habría
+  podido hacer clic ni enviar un formulario).
+- El flujo de negocio completo (reportar → buscar → coincidencia →
+  solicitar → verificar → aprobar) funciona con datos reales persistidos
+  en la base de datos, no simulados.
+
+## Limitación de esta evidencia
+
+Al igual que smoke_test_manual_v1.0.md, esta prueba corrió sobre
+localhost. La prueba sobre la URL pública desplegada debe repetirse y
+documentarse aparte cuando exista esa URL (ver docs/DEPLOYMENT.md).

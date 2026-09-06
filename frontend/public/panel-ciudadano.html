@@ -54,14 +54,9 @@
     <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
   </footer>
 
-  <script src="js/datos-temporales.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/main.js"></script>
-  <script>
-    // Simulación: mostramos el nombre del "usuario actual" tomado de los datos temporales
-    const usuario = usuariosSimulados.find(u => u.id === usuarioActualId);
-    if (usuario) {
-      document.getElementById('saludo').textContent = 'Hola, ' + usuario.nombre;
-    }
-  </script>
+  <script src="js/sesion.js"></script>
+  <script src="js/pagina-panel-ciudadano.js"></script>
 </body>
 </html>

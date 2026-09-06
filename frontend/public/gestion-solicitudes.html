@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EncuentraU - Gestión de solicitudes</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="panel-admin.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU <span class="badge-admin">Admin</span></a>
+      <nav class="nav-links">
+        <a href="panel-admin.html">Panel</a>
+        <a href="gestion-reportes.html">Gestión de reportes</a>
+        <a href="gestion-solicitudes.html">Gestión de solicitudes</a>
+        <a href="gestion-usuarios.html">Gestión de usuarios</a>
+        <a href="index.html">Cerrar sesión</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <h2 class="titulo-seccion">Gestión de solicitudes</h2>
+    <p class="subtitulo">Revisa las solicitudes de reclamación y aprueba o rechaza según la información de verificación.</p>
+
+    <div class="grid" id="lista-solicitudes"></div>
+  </main>
+
+  <footer class="footer">
+    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/pagina-gestion-solicitudes.js"></script>
+</body>
+</html>

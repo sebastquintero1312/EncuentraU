@@ -14,6 +14,7 @@
       <nav class="nav-links">
         <a href="panel-admin.html">Panel</a>
         <a href="gestion-reportes.html">Gestión de reportes</a>
+        <a href="gestion-solicitudes.html">Gestión de solicitudes</a>
         <a href="gestion-usuarios.html">Gestión de usuarios</a>
         <a href="index.html">Cerrar sesión</a>
       </nav>
@@ -22,7 +23,7 @@
 
   <main class="container">
     <h2 class="titulo-seccion">Panel de administración</h2>
-    <p class="subtitulo">Resumen general de la plataforma (datos simulados).</p>
+    <p class="subtitulo">Resumen general de la plataforma.</p>
 
     <div class="stats-grid">
       <div class="stat-card">
@@ -46,8 +47,13 @@
     <div class="grid">
       <div class="card">
         <h3>Gestión de reportes</h3>
-        <p>Revisa, cambia el estado o elimina los reportes de objetos.</p>
+        <p>Revisa y cambia el estado de los reportes de objetos.</p>
         <a href="gestion-reportes.html" class="btn btn-primary btn-small">Ir a reportes</a>
+      </div>
+      <div class="card">
+        <h3>Gestión de solicitudes</h3>
+        <p>Aprueba o rechaza las solicitudes de reclamación de objetos.</p>
+        <a href="gestion-solicitudes.html" class="btn btn-primary btn-small">Ir a solicitudes</a>
       </div>
       <div class="card">
         <h3>Gestión de usuarios</h3>
@@ -61,15 +67,9 @@
     <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
   </footer>
 
-  <script src="js/datos-temporales.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/main.js"></script>
-  <script>
-    document.getElementById('total-reportes').textContent = reportesSimulados.length;
-    document.getElementById('reportes-activos').textContent =
-      reportesSimulados.filter(r => r.estado === 'activo').length;
-    document.getElementById('total-usuarios').textContent = usuariosSimulados.length;
-    document.getElementById('solicitudes-pendientes').textContent =
-      solicitudesSimuladas.filter(s => s.estado === 'pendiente').length;
-  </script>
+  <script src="js/sesion.js"></script>
+  <script src="js/pagina-panel-admin.js"></script>
 </body>
 </html>

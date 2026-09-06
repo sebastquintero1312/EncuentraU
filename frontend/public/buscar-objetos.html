@@ -25,7 +25,6 @@
   <main class="container">
     <h2 class="titulo-seccion">Buscar objetos</h2>
     <p class="subtitulo">Consulta todos los reportes de la universidad.</p>
-    <div class="aviso-simulado">La búsqueda filtra sobre datos simulados en el navegador, no consulta ningún servidor todavía.</div>
 
     <div class="filtros">
       <div class="form-group">
@@ -62,50 +61,8 @@
     <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
   </footer>
 
-  <script src="js/datos-temporales.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/main.js"></script>
-  <script>
-    function pintarResultados(lista) {
-      const contenedor = document.getElementById('resultados');
-      contenedor.innerHTML = '';
-
-      if (lista.length === 0) {
-        contenedor.innerHTML = '<p>No se encontraron objetos con esos filtros.</p>';
-        return;
-      }
-
-      lista.forEach(reporte => {
-        const tarjeta = document.createElement('div');
-        tarjeta.className = 'card';
-        tarjeta.innerHTML = `
-          <h3>${reporte.objeto}</h3>
-          <p><span class="badge badge-${reporte.tipo}">${reporte.tipo}</span> · ${reporte.categoria}</p>
-          <p>${reporte.ubicacion} — ${reporte.fecha}</p>
-          <a class="btn btn-secondary btn-small" href="detalle-objeto.html?id=${reporte.id}">Ver detalle</a>
-        `;
-        contenedor.appendChild(tarjeta);
-      });
-    }
-
-    function buscar() {
-      const texto = document.getElementById('texto').value.trim().toLowerCase();
-      const tipo = document.getElementById('tipo').value;
-      const categoria = document.getElementById('categoria').value;
-
-      const resultado = reportesSimulados.filter(r => {
-        const coincideTexto = texto === '' || r.objeto.toLowerCase().includes(texto);
-        const coincideTipo = tipo === '' || r.tipo === tipo;
-        const coincideCategoria = categoria === '' || r.categoria === categoria;
-        return coincideTexto && coincideTipo && coincideCategoria;
-      });
-
-      pintarResultados(resultado);
-    }
-
-    document.getElementById('btn-buscar').addEventListener('click', buscar);
-
-    // Al cargar la página se muestran todos los reportes activos
-    pintarResultados(reportesSimulados);
-  </script>
+  <script src="js/pagina-buscar-objetos.js"></script>
 </body>
 </html>

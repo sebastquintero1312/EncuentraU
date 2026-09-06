@@ -106,6 +106,44 @@ def mis_reportes(usuario_actual):
     }), 200
 
 
+def listar_admin():
+    """A diferencia de listar() (pública), esta vista no filtra por estado
+    por defecto: un administrador necesita ver también los reportes
+    resueltos, cerrados y cancelados para poder gestionarlos."""
+    pagina, por_pagina = parametros_paginacion(request)
+    query = Objeto.query
+
+    tipo = request.args.get('tipo')
+    if tipo in TIPOS_VALIDOS:
+        query = query.filter(Objeto.tipo == tipo)
+
+    estado = request.args.get('estado')
+    if estado in ESTADOS_VALIDOS:
+        query = query.filter(Objeto.estado == estado)
+
+    query = query.order_by(Objeto.created_at.desc())
+    paginado = query.paginate(page=pagina, per_page=por_pagina, error_out=False)
+
+    return jsonify({
+        'datos': [o.publico() for o in paginado.items],
+        'total': paginado.total,
+        'pagina': pagina,
+        'por_pagina': por_pagina,
+    }), 200
+
+
+def cambiar_estado_admin(usuario_actual, objeto_id):
+    objeto = db.session.get(Objeto, objeto_id)
+    if not objeto:
+        return jsonify({'mensaje': 'Reporte no encontrado'}), 404
+
+    datos = request.get_json(silent=True) or {}
+    ok, error = objetos_service.cambiar_estado_admin(objeto, datos.get('estado'))
+    if not ok:
+        return jsonify({'mensaje': error}), 400
+    return jsonify({'mensaje': 'Estado actualizado correctamente', 'objeto': objeto.publico()}), 200
+
+
 def solicitudes_del_objeto(usuario_actual, objeto_id):
     """Información de verificación PRIVADA: solo la ve el dueño del reporte
     o un administrador (ver docstring de models/solicitud.py)."""

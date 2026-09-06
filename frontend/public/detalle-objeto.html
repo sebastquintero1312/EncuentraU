@@ -33,45 +33,9 @@
     <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
   </footer>
 
-  <script src="js/datos-temporales.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/main.js"></script>
-  <script>
-    // Leemos el id del objeto desde la URL, ej: detalle-objeto.html?id=2
-    const parametros = new URLSearchParams(window.location.search);
-    const id = Number(parametros.get('id'));
-    const reporte = reportesSimulados.find(r => r.id === id);
-
-    const contenedor = document.getElementById('detalle');
-
-    if (!reporte) {
-      contenedor.innerHTML = `
-        <p>No se encontró ningún reporte con ese id.</p>
-        <a class="btn btn-secondary" href="buscar-objetos.html">Volver a buscar</a>
-      `;
-    } else {
-      contenedor.innerHTML = `
-        <h2>${reporte.objeto}</h2>
-        <div class="estado-linea">
-          <span class="badge badge-${reporte.tipo}">${reporte.tipo}</span>
-          <span class="badge ${claseBadgeEstado(reporte.estado)}">${reporte.estado}</span>
-        </div>
-        <dl>
-          <dt>Categoría</dt>
-          <dd>${reporte.categoria}</dd>
-          <dt>Descripción</dt>
-          <dd>${reporte.descripcion}</dd>
-          <dt>Ubicación</dt>
-          <dd>${reporte.ubicacion}</dd>
-          <dt>Fecha</dt>
-          <dd>${reporte.fecha}</dd>
-          <dt>Reportado por</dt>
-          <dd>${reporte.usuarioNombre}</dd>
-        </dl>
-        <br>
-        <a class="btn btn-primary" href="solicitud-recuperacion.html?id=${reporte.id}">Solicitar recuperación</a>
-        <a class="btn btn-secondary" href="buscar-objetos.html">Volver a buscar</a>
-      `;
-    }
-  </script>
+  <script src="js/sesion.js"></script>
+  <script src="js/pagina-detalle-objeto.js"></script>
 </body>
 </html>

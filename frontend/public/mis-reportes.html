@@ -25,7 +25,6 @@
   <main class="container">
     <h2 class="titulo-seccion">Mis reportes</h2>
     <p class="subtitulo">Estos son los objetos que has reportado como perdidos o encontrados.</p>
-    <div class="aviso-simulado">La lista se arma con datos simulados (js/datos-temporales.js), no con una base de datos real.</div>
 
     <div class="tabla-wrapper">
       <table>
@@ -40,7 +39,7 @@
           </tr>
         </thead>
         <tbody id="cuerpo-tabla">
-          <!-- Las filas se llenan con JavaScript a partir de reportesSimulados -->
+          <!-- Las filas se llenan con JavaScript a partir de GET /api/mis-reportes -->
         </tbody>
       </table>
     </div>
@@ -50,28 +49,9 @@
     <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
   </footer>
 
-  <script src="js/datos-temporales.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/main.js"></script>
-  <script>
-    const misReportes = reportesSimulados.filter(r => r.usuarioId === usuarioActualId);
-    const cuerpoTabla = document.getElementById('cuerpo-tabla');
-
-    if (misReportes.length === 0) {
-      cuerpoTabla.innerHTML = '<tr><td colspan="6">Todavía no has creado ningún reporte.</td></tr>';
-    } else {
-      misReportes.forEach(reporte => {
-        const fila = document.createElement('tr');
-        fila.innerHTML = `
-          <td>${reporte.objeto}</td>
-          <td><span class="badge badge-${reporte.tipo}">${reporte.tipo}</span></td>
-          <td>${reporte.ubicacion}</td>
-          <td>${reporte.fecha}</td>
-          <td><span class="badge ${claseBadgeEstado(reporte.estado)}">${reporte.estado}</span></td>
-          <td><a class="btn btn-secondary btn-small" href="detalle-objeto.html?id=${reporte.id}">Ver detalle</a></td>
-        `;
-        cuerpoTabla.appendChild(fila);
-      });
-    }
-  </script>
+  <script src="js/sesion.js"></script>
+  <script src="js/pagina-mis-reportes.js"></script>
 </body>
 </html>
