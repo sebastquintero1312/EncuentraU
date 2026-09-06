@@ -110,6 +110,8 @@ Ver `docs/DEPLOYMENT.md` para el estado real de este despliegue (qué está prep
 - Estilo de mensajes de error en español, formato `{mensaje, errores?}`.
 - Identidad visual del frontend (paleta de colores, logo, estructura de páginas) — no se rediseñó, solo se conectó a datos reales.
 
+Ver también `docs/DIAGRAMAS.md`: entidad-relación, casos de uso, clases y actividad del proceso de reclamación.
+
 ## 8. Decisiones nuevas en v1.0
 
 - SQLAlchemy + Flask-Migrate reemplazan el almacenamiento en listas de Python.
