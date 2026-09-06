@@ -1,113 +1,100 @@
 # Seguridad de EncuentraU
 
-Versión: **v0.25**
+Versión: **v1.0**
 
-Este documento explica, con honestidad, qué medidas de seguridad están
-implementadas en esta versión, cómo funcionan, y qué limitaciones tienen
-todavía (para no dar una falsa sensación de que todo está resuelto).
+Este documento explica, con honestidad, qué medidas de seguridad están implementadas, cómo funcionan, cómo se probaron y qué limitaciones tienen todavía. Ver también `docs/MATRIZ_SEGURIDAD.md` (revisión OWASP Top 10) y `docs/REGLAS_100.md` (las 100 reglas con evidencia).
 
 ## 1. Política de contraseñas
 
-Se exige, tanto en el frontend (visual) como en el backend (obligatorio):
+Igual que en v0.25 (sin cambios en la política, solo en el algoritmo de hash — ver sección 2): mínimo 12 caracteres, mayúscula, minúscula, número, carácter especial, sin contraseñas comunes, sin el correo/nombre del usuario. Validado en backend (`backend/app/services/auth_service.py`), el frontend solo ayuda visualmente.
 
-- Mínimo 12 caracteres.
-- Al menos una mayúscula, una minúscula, un número y un carácter especial
-  (`! @ # $ % ^ & * ( ) _ - + =`).
-- No se permite una lista de contraseñas comunes (`12345678`, `password`,
-  `qwerty`, `admin123`, etc. — ver `backend/app/services/auth_service.py`).
-- No se permite que la contraseña contenga el correo o el nombre de la
-  persona.
+## 2. Hashing de contraseñas — cambio en v1.0
 
-**El frontend solo ayuda visualmente** (checklist en tiempo real + barra de
-fortaleza). La regla que de verdad se aplica es la del backend
-(`validar_contrasena` en `auth_service.py`), porque nunca se debe confiar en
-lo que llega del navegador.
-
-## 2. Hashing de contraseñas
-
-Las contraseñas se cifran con `werkzeug.security.generate_password_hash`
-(usa el algoritmo `scrypt` por defecto en Werkzeug moderno). Nunca se
-guardan en texto plano, nunca se devuelven por la API, y nunca se escriben
-en logs.
+**v0.25** usaba `werkzeug.security.generate_password_hash` (algoritmo `scrypt`). **v1.0 usa Argon2id** (`argon2-cffi`), el algoritmo recomendado actualmente (ganador del Password Hashing Competition). Verificado con `backend/tests/unit/test_auth_service.py`: el hash generado empieza con `$argon2id$`.
 
 ## 3. Recuperación de contraseña
 
-Flujo implementado:
+Sin cambios de diseño respecto a v0.25 (token con `secrets.token_urlsafe(32)`, expira en 30 minutos, un solo uso, mensaje genérico anti-enumeración). En v1.0 esto se probó con evidencia real, incluyendo forzar la expiración de un token sin esperar 30 minutos (`test_token_recuperacion_expirado_es_rechazado`).
 
-1. El usuario pide recuperación con su correo (`POST /api/auth/recuperar`).
-2. El backend **siempre responde el mismo mensaje genérico**
-   ("Si el correo está registrado, recibirás instrucciones para continuar."),
-   exista o no el correo, para evitar que alguien pueda enumerar qué correos
-   están registrados.
-3. Si el correo sí existe, se genera un token con `secrets.token_urlsafe(32)`
-   (generador criptográficamente seguro, no `random`, no IDs secuenciales).
-4. El token expira a los **30 minutos** (`Config.MINUTOS_EXPIRACION_TOKEN`).
-5. El usuario usa el token en `restablecer-contrasena.html`, que llama a
-   `POST /api/auth/restablecer`.
-6. Al usarse (con éxito o no), el token queda marcado como `usado` y no puede
-   reutilizarse.
-
-**Limitación honesta**: todavía no hay envío real de correos. El token se
-imprime en la consola del servidor Flask para poder probar el flujo
-completo sin depender de un servicio de correo (eso queda para una fase
-posterior).
+**Limitación honesta, sigue vigente**: no hay envío real de correos. El token se imprime en el log del servidor.
 
 ## 4. Rate limiting (Flask-Limiter)
 
-Límites aplicados por IP:
+Mismos límites que v0.25 (login 10/min, registro/recuperación/restablecimiento 5/min), más un nuevo límite de 20/hora en creación de reportes y solicitudes (`backend/app/routes/objetos_routes.py`, `solicitudes_routes.py`).
 
-- `POST /api/auth/login`: 10 intentos por minuto.
-- `POST /api/auth/registro`: 5 por minuto.
-- `POST /api/auth/recuperar`: 5 por minuto.
-- `POST /api/auth/restablecer`: 5 por minuto.
-
-Son límites moderados a propósito, para no entorpecer las pruebas del
-equipo, pero sí frenar intentos automatizados de fuerza bruta.
-
-**Limitación honesta**: no se pudo instalar `Flask-Limiter` en este entorno
-de desarrollo (sin acceso a internet para `pip install`), así que el código
-está escrito y lógicamente correcto, pero no se ejecutó de punta a punta
-aquí. Ver `CHANGELOG.md` para más detalle sobre qué se probó y qué no.
+**A diferencia de v0.25** (donde había una nota de incertidumbre sobre si Flask-Limiter llegó a probarse instalado), en v1.0 se verificó con ejecución real: `tests/security/test_csrf_rate_limit.py::test_rate_limit_login` y `test_rate_limit_registro` fuerzan el límite y confirman el código 429.
 
 ## 5. Sesión
 
-- Se usa la sesión de Flask (cookie firmada con `SECRET_KEY`).
-- La cookie se configura con `HttpOnly` (JavaScript no puede leerla),
-  `SameSite=Lax` (protección básica contra CSRF) y `Secure` activado
-  automáticamente cuando `FLASK_ENV=production` (en desarrollo por HTTP no
-  aplica).
-- No se guarda ningún dato sensible en `localStorage` ni `sessionStorage`.
+Sin cambios de diseño. Verificado con una cabecera `Set-Cookie` real: `HttpOnly; Path=/; SameSite=Lax` (confirmado con `curl` contra el servidor real). `Secure` se activa solo si `FLASK_ENV=production` — no verificado todavía en un despliegue HTTPS real.
 
-## 6. CSRF
+## 6. CSRF — bug real encontrado y corregido en v1.0
 
-Se usa `Flask-WTF` (`CSRFProtect`) de forma real, no simulada:
+El diseño (Flask-WTF, token en header `X-CSRFToken`) es el mismo de v0.25, pero durante la migración se encontraron y corrigieron **dos bugs reales**, invisibles en v0.25 porque nunca se probó un login seguido de otra petición protegida:
 
-1. El frontend pide un token en `GET /api/auth/csrf-token`.
-2. Lo reenvía en el header `X-CSRFToken` en cada petición que cambia datos
-   (login, registro, recuperación, restablecimiento).
-3. Flask-WTF valida ese token contra la sesión antes de procesar la
-   petición.
+1. **El token CSRF quedaba invalidado tras login/logout.** `session.clear()` (necesario para prevenir session fixation) también borra el `csrf_token` guardado en la sesión. Corregido: login/logout ahora devuelven un `csrf_token` nuevo en su respuesta, y el frontend lo actualiza automáticamente.
+2. **Un CSRF ausente/inválido devolvía 500 en vez de 400.** El manejador de errores solo tenía casos específicos para 404/405/429, y el manejador genérico de `Exception` interceptaba cualquier otro `HTTPException` (incluyendo `CSRFError`) antes de que Flask pudiera usar su código HTTP real. Corregido con un manejador explícito para `werkzeug.exceptions.HTTPException`.
 
-## 7. Validación en el backend
+Ambos verificados con pruebas automatizadas (`tests/security/test_csrf_rate_limit.py`) y con la prueba manual documentada en `docs/evidencia/smoke_test_manual_v1.0.md`.
 
-Cada dato que llega del frontend se vuelve a validar en Python: campos
-obligatorios, formato de correo, coincidencia de contraseñas, y la política
-de contraseñas completa. El frontend nunca es la única barrera.
+## 7. Cabeceras de seguridad — nuevo en v1.0
 
-## 8. Mensajes de error
+v0.25 no tenía ninguna cabecera de seguridad además de las de sesión. v1.0 agrega, a cada respuesta:
 
-Los errores nunca exponen detalles internos (sin stack traces, sin
-consultas, sin nombres de variables). Ver
-`backend/app/middlewares/manejo_errores.py`.
+```
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(), microphone=(), camera=()
+Strict-Transport-Security: max-age=63072000; includeSubDomains   (solo en producción)
+```
 
-## 9. Lo que NO se implementó todavía (a propósito)
+Confirmado con una respuesta HTTP real (`curl -I`) y con la verificación E2E completa (si la CSP hubiera bloqueado algún script del frontend, ninguna de esas 14 verificaciones habría podido completarse).
 
-- Envío real de correos para la recuperación.
-- Conexión a una base de datos real (los usuarios viven en memoria en
-  `backend/app/models/usuario.py`; se pierden al reiniciar el servidor).
-  Esto es intencional en esta fase: el objetivo era dejar la seguridad del
-  flujo de autenticación bien resuelta antes de conectar la base de datos
-  definitiva.
-- Verificación de correo institucional (dominio específico de la
-  universidad).
+**Nota sobre `style-src 'unsafe-inline'`**: se mantiene porque varias páginas usan atributos `style="..."` inline para ajustes menores de layout (ej. `style="width:100%"` en botones). Quitarlo requeriría mover esos estilos a clases CSS — mejora posible a futuro, riesgo bajo (no es un vector de XSS ejecutable, solo de inyección de estilos).
+
+## 8. Validación en el backend
+
+Sin cambios de principio respecto a v0.25 (el frontend nunca es la autoridad); se amplía a todos los módulos nuevos (objetos, solicitudes, administración) con la misma disciplina.
+
+## 9. Mensajes de error
+
+Sin cambios de principio; se corrigió el bug de la sección 6.2 que hacía que algunos errores expusieran el código 500 genérico en vez del código real (sin exponer nunca detalles internos en ninguno de los dos casos — la diferencia era solo el código HTTP, no el contenido).
+
+## 10. Autorización — nuevo en v1.0 (no existía en v0.25 más allá de la autenticación)
+
+Ver `docs/AUTHORIZATION.md` para el detalle completo: decoradores `login_requerido`/`admin_requerido`, verificación de ownership (IDOR) en cada modificación, whitelist de campos contra mass assignment, un admin no puede modificarse a sí mismo.
+
+## 11. Base de datos — nuevo en v1.0
+
+v0.25 no tenía base de datos real. v1.0 usa SQLAlchemy con `CheckConstraint` a nivel de base de datos para los campos de valores fijos (defensa en profundidad: ni un bug de Python podría escribir un rol o estado inválido), claves foráneas reales, y migraciones versionadas con Alembic. Ver `docs/DATABASE.md`.
+
+## 12. Pruebas de seguridad ejecutadas (checklist de la skill seguridad-ofensiva-defensiva)
+
+| Prueba | Resultado |
+|---|---|
+| SQL Injection | Probado, sistema protegido (SQLAlchemy parametrizado) |
+| XSS almacenado | Probado, se guarda como texto plano; frontend usa `textContent` al mostrar |
+| IDOR | Probado, ownership verificado en cada endpoint relevante |
+| Fuerza bruta | Probado, rate limiting activo y confirmado con 429 |
+| CSRF | Probado, token requerido; 2 bugs reales encontrados y corregidos |
+| Escalamiento de roles (mass assignment) | Probado, el campo `rol` del cliente se ignora siempre |
+| Tokens expirados | Probado, rechazados con 400 (forzando la expiración en la prueba) |
+| Tokens usados | Probado, rechazados con 400 en el segundo uso |
+| Payloads oversized | Probado, rechazados con 413 (`MAX_CONTENT_LENGTH`, agregado en v1.0) |
+| JSON malformado | Probado, no causa 500 |
+| Path traversal | Probado sobre archivos estáticos, 404 |
+
+Ver `docs/evidencia/` para las ejecuciones reales y `backend/tests/security/` para el código de las pruebas.
+
+## 13. Lo que NO se implementó todavía (a propósito o por bloqueo externo)
+
+- Envío real de correos (recuperación de contraseña) — decisión de alcance, no de seguridad.
+- Verificación de correo institucional por dominio específico.
 - Confirmación de cuenta por correo antes de poder iniciar sesión.
+- Autenticación de dos factores.
+- HTTPS/despliegue de producción real (código y configuración listos; requiere autorización externa de un proveedor de hosting — ver `docs/DEPLOYMENT.md`).
+- Escaneo automatizado de dependencias vulnerables (ej. `pip-audit` en CI).
+
+Ninguna de estas limitaciones se presenta aquí como resuelta cuando no lo está.
