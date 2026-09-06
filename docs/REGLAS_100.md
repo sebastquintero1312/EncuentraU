@@ -321,8 +321,8 @@
 - **Criterio de cumplimiento**: El JS del frontend usa textContent para insertar datos.
 - **Prueba sugerida**: Inspeccionar el JS → buscar usos de innerHTML con variables.
 - **Archivo relacionado**: `frontend/public/js/pagina-*.js`
-- **Evidencia**: Búsqueda dirigida (`grep innerHTML`) en `frontend/public/js/`: cero resultados en el código nuevo (solo `.textContent = ''` para limpiar, y las tablas se limpian con `.textContent = ''` en vez de `.innerHTML = ''`).
-- **Estado**: VERIFICADO
+- **Evidencia**: Los 12 archivos `js/pagina-*.js` (código nuevo de v1.0, el que renderiza datos de la API) usan `crearElemento`/`crearBadge` (`textContent`) o `.textContent = ''` para limpiar, nunca `innerHTML`, confirmado por búsqueda dirigida. **Corrección tras revisión independiente**: `js/contrasena-fortaleza.js` (código heredado de v0.25, sin tocar en esta migración) sí usa `innerHTML` en las líneas 56 y 61, pero el contenido interpolado es un diccionario estático hardcodeado en el propio archivo (`textos[clave]`, ej. "Mínimo 12 caracteres"), nunca un dato que venga de la API o de otro usuario — no es una superficie de XSS real, pero la primera versión de esta regla afirmó "cero resultados" en la búsqueda, lo cual era impreciso. Queda corregido para reflejar la realidad exacta del código.
+- **Estado**: VERIFICADO (para el código que sí maneja datos de usuario/API; ver aclaración sobre `contrasena-fortaleza.js`)
 
 ### RU-035
 - **Descripción**: Content-Security-Policy está configurado.
@@ -451,7 +451,7 @@
 - **Criterio de cumplimiento**: El JS no guarda tokens en localStorage ni sessionStorage.
 - **Prueba sugerida**: Revisar el código JS → buscar localStorage.setItem con tokens.
 - **Archivo relacionado**: `frontend/public/js/api.js`
-- **Evidencia**: Búsqueda dirigida de `localStorage`/`sessionStorage` en todo `frontend/public/js/`: cero resultados. El CSRF token vive solo en `csrfTokenEnMemoria`, una variable de JS que se pierde al recargar.
+- **Evidencia**: Búsqueda dirigida de `localStorage`/`sessionStorage` en todo `frontend/public/js/`: la única coincidencia es un comentario en `api.js` líneas 10-13 que explica, en prosa, que estos mecanismos NO se usan — no hay ninguna llamada real a `localStorage.setItem`/`sessionStorage.setItem` en todo el código. El CSRF token vive solo en `csrfTokenEnMemoria`, una variable de JS que se pierde al recargar.
 - **Estado**: VERIFICADO
 
 ### RU-049
@@ -858,7 +858,7 @@
 - **Criterio de cumplimiento**: `pytest tests/` corre sin errores y cubre los 4 módulos de negocio.
 - **Prueba sugerida**: `cd backend && pytest -v`
 - **Archivo relacionado**: `backend/tests/`
-- **Evidencia**: `docs/evidencia/pytest_run_v1.0.txt` — 88 pruebas, todas pasando.
+- **Evidencia**: `docs/evidencia/pytest_run_v1.0.txt` — 89 pruebas, todas pasando, con aislamiento de base de datos confirmado real (ver `docs/TESTING.md`, sección "Bug real corregido": una revisión final independiente encontró que el aislamiento previo no funcionaba de verdad — corregido y reverificado).
 - **Estado**: VERIFICADO
 
 ### RU-092

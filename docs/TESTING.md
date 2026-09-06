@@ -51,9 +51,15 @@ backend/tests/
 
 ## Aislamiento
 
-- Cada prueba de pytest usa una base de datos SQLite temporal propia (`tempfile.mkstemp`), creada desde cero y borrada al terminar — ninguna prueba depende de datos dejados por otra.
+- Cada prueba de pytest usa una base de datos SQLite temporal propia (`tempfile.mkstemp`), creada desde cero y borrada al terminar — ninguna prueba depende de datos dejados por otra. **Confirmado empíricamente**: correr la suite completa con `backend/instance/` vacío deja esa carpeta vacía al terminar (el archivo de desarrollo nunca se toca).
 - `WTF_CSRF_ENABLED` y `RATELIMIT_ENABLED` están desactivados por defecto para no interferir con pruebas que no los están probando específicamente; se activan explícitamente solo en `tests/security/test_csrf_rate_limit.py`.
 - La verificación E2E requiere una base de datos limpia (recomendado: borrar `backend/instance/encuentrau_dev.db` antes de correrla) porque usa correos de prueba fijos.
+
+### Bug real corregido: el aislamiento de arriba no funcionaba hasta la revisión final
+
+Durante la revisión final independiente previa a declarar v1.0 (ver `CHANGELOG.md`), se encontró que `app.config['SQLALCHEMY_DATABASE_URI'] = ...` **aplicado después de `create_app()`** no tenía ningún efecto real: Flask-SQLAlchemy resuelve y fija el engine dentro de `db.init_app()` (llamado dentro de `create_app()`), así que cualquier cambio posterior a `app.config` se ignoraba. Esto significaba que **las 88 pruebas "aisladas" en realidad corrían contra `backend/instance/encuentrau_dev.db`** (la misma base de datos usada en desarrollo manual), confiando únicamente en que cada prueba hiciera `drop_all()`/`create_all()` de forma secuencial para no pisarse entre sí — funcionaba por casualidad de orden de ejecución, no por diseño, y se habría roto con ejecución en paralelo (`pytest-xdist`) o con cualquier prueba que no limpiara correctamente. El mismo problema afectaba a `RATELIMIT_ENABLED` (Flask-Limiter también fija su estado en `init_app()`, no lo relee dinámicamente).
+
+**Corrección**: `create_app()` ahora acepta un parámetro `config_overrides` (dict) que se aplica *antes* de `db.init_app()`/`limiter.init_app()`, no después. `conftest.py` y las pruebas de rate limiting se actualizaron para pasar la configuración de esta forma. Verificado borrando `backend/instance/encuentrau_dev.db` antes de correr la suite completa y confirmando que la carpeta queda vacía al terminar (antes de la corrección, el archivo se recreaba con cada corrida de pytest).
 
 ## Cobertura por funcionalidad
 

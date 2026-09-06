@@ -23,11 +23,21 @@ RAIZ_PROYECTO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 CARPETA_FRONTEND = os.path.join(RAIZ_PROYECTO, 'frontend', 'public')
 
 
-def create_app():
+def create_app(config_overrides=None):
+    """`config_overrides`: usado SOLO por las pruebas, para apuntar a una
+    base de datos temporal aislada. Debe aplicarse ANTES de db.init_app():
+    Flask-SQLAlchemy resuelve y cachea el engine en ese momento a partir de
+    app.config, así que cambiar app.config['SQLALCHEMY_DATABASE_URI'] DESPUÉS
+    de create_app() no tiene ningún efecto (bug real encontrado durante la
+    revisión final de v1.0 — antes de esta corrección, todas las pruebas de
+    pytest terminaban usando silenciosamente backend/instance/encuentrau_dev.db
+    en lugar del archivo temporal que creían estar usando)."""
     Config.validar_configuracion_produccion()
 
     app = Flask(__name__, static_folder=CARPETA_FRONTEND, static_url_path='')
     app.config.from_object(Config)
+    if config_overrides:
+        app.config.update(config_overrides)
 
     db.init_app(app)
     migrate.init_app(app, db)

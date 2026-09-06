@@ -25,19 +25,26 @@ def app():
     fd, ruta_db = tempfile.mkstemp(suffix='.db')
     os.close(fd)
 
-    aplicacion = create_app()
-    aplicacion.config.update(
-        TESTING=True,
-        SQLALCHEMY_DATABASE_URI=f'sqlite:///{ruta_db}',
-        WTF_CSRF_ENABLED=False,   # las pruebas de CSRF activan esto aparte
-        RATELIMIT_ENABLED=False,  # las pruebas de rate limit activan esto aparte
-    )
+    # IMPORTANTE: la base de datos temporal se pasa como config_overrides,
+    # aplicado DENTRO de create_app() antes de db.init_app(). Hacerlo
+    # después (app.config.update(...) sobre la app ya creada) no tiene
+    # ningún efecto real: Flask-SQLAlchemy ya habría fijado el engine con
+    # la URL por defecto de Config (backend/instance/encuentrau_dev.db).
+    aplicacion = create_app(config_overrides={
+        'TESTING': True,
+        'SQLALCHEMY_DATABASE_URI': f'sqlite:///{ruta_db}',
+        'WTF_CSRF_ENABLED': False,   # las pruebas de CSRF activan esto aparte
+        'RATELIMIT_ENABLED': False,  # las pruebas de rate limit activan esto aparte
+    })
 
     with aplicacion.app_context():
         _db.create_all()
         yield aplicacion
         _db.session.remove()
         _db.drop_all()
+        _db.engine.dispose()  # cierra la conexión SQLite; en Windows, sin
+        # esto, el archivo queda bloqueado y os.remove() falla con
+        # PermissionError (WinError 32) al limpiar el archivo temporal.
 
     os.remove(ruta_db)
 

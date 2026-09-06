@@ -32,7 +32,7 @@ Todos los endpoints viven bajo `/api`. El frontend se sirve desde el mismo orige
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
 | GET | `/api/objetos` | No | Búsqueda pública. Query: `tipo`, `categoria`, `estado`, `ubicacion`, `q` (nombre/descripción), `pagina`, `por_pagina`. Sin `estado`, solo muestra `activo`/`en_proceso` |
-| POST | `/api/objetos` | Sí | Crea un reporte. Body: `tipo` (`perdido`\|`encontrado`), `nombre`, `categoria`, `descripcion`, `ubicacion`, `fecha_evento` (AAAA-MM-DD, no futura), `imagen_url?` (URL http(s) opcional) |
+| POST | `/api/objetos` | Sí — 20/hora | Crea un reporte. Body: `tipo` (`perdido`\|`encontrado`), `nombre`, `categoria`, `descripcion`, `ubicacion`, `fecha_evento` (AAAA-MM-DD, no futura), `imagen_url?` (URL http(s) opcional) |
 | GET | `/api/objetos/:id` | No | Detalle. Devuelve `{objeto, coincidencias: [...]}` — coincidencias solo si el objeto está activo/en_proceso |
 | PUT | `/api/objetos/:id` | Sí (dueño o admin) | Actualiza `nombre, categoria, descripcion, ubicacion, fecha_evento, imagen_url` (whitelist; `estado`/`usuario_id` se ignoran) |
 | DELETE | `/api/objetos/:id` | Sí (dueño o admin) | Cancela el reporte (`estado → cancelado`), solo si la transición es válida |
@@ -46,7 +46,7 @@ Todos los endpoints viven bajo `/api`. El frontend se sirve desde el mismo orige
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
-| POST | `/api/solicitudes` | Sí | Crea una solicitud. Body: `objeto_id, contacto, mensaje`. Rechaza si el objeto es propio, no admite solicitudes, o ya hay una solicitud abierta del mismo usuario |
+| POST | `/api/solicitudes` | Sí — 20/hora | Crea una solicitud. Body: `objeto_id, contacto, mensaje`. Rechaza si el objeto es propio, no admite solicitudes, o ya hay una solicitud abierta del mismo usuario |
 | GET | `/api/mis-solicitudes` | Sí | Solicitudes hechas por el usuario actual |
 | DELETE | `/api/solicitudes/:id` | Sí (solicitante) | Cancela la propia solicitud (si sigue abierta) |
 | GET | `/api/admin/solicitudes` | Admin | Todas las solicitudes. Query: `estado`, `pagina`, `por_pagina` |
