@@ -5,9 +5,12 @@
 # en lo que llega del navegador: aquí se repite todo.
 
 import re
-from werkzeug.security import generate_password_hash, check_password_hash
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHashError
 
 LONGITUD_MINIMA = 12
+
+_hasher = PasswordHasher()
 
 # Lista corta de contraseñas comunes a bloquear (se puede ampliar más adelante)
 CONTRASENAS_COMUNES = {
@@ -58,8 +61,13 @@ def correo_valido(correo):
 
 
 def crear_hash(password):
-    return generate_password_hash(password)
+    # Argon2id (parámetros por defecto de argon2-cffi: seguros para 2026,
+    # ganador del Password Hashing Competition, recomendado sobre scrypt/bcrypt).
+    return _hasher.hash(password)
 
 
 def verificar_password(password, password_hash):
-    return check_password_hash(password_hash, password)
+    try:
+        return _hasher.verify(password_hash, password)
+    except (VerifyMismatchError, VerificationError, InvalidHashError):
+        return False

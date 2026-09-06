@@ -43,5 +43,14 @@ async function peticionSegura(ruta, cuerpo) {
   });
 
   const datos = await respuesta.json().catch(() => ({}));
+
+  // Login y logout limpian la sesión del servidor (anti session-fixation),
+  // lo que invalida el token CSRF que teníamos en memoria. El backend manda
+  // uno nuevo en la respuesta cuando eso pasa; lo actualizamos aquí para que
+  // la siguiente petición protegida no falle.
+  if (datos && datos.csrf_token) {
+    csrfTokenEnMemoria = datos.csrf_token;
+  }
+
   return { ok: respuesta.ok, status: respuesta.status, datos };
 }

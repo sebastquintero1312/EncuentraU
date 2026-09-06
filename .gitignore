@@ -7,3 +7,16 @@ __pycache__/
 *.pyc
 venv/
 .venv/
+
+# Base de datos local / artefactos de pruebas
+instance/
+*.db
+*.sqlite
+*.sqlite3
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Editor
+.vscode/
+.idea/

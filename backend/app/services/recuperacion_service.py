@@ -24,7 +24,7 @@ def obtener_usuario_id_si_token_valido(token):
     registro = buscar_token(token)
     if not token_es_valido(registro):
         return None, registro
-    return registro['usuario_id'], registro
+    return registro.usuario_id, registro
 
 
 def confirmar_uso_token(registro):
