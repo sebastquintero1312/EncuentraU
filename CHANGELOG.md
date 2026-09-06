@@ -61,6 +61,18 @@ sistema con backend, base de datos y frontend genuinamente integrados. Ver
    `registro.usuario_id`.
 4. **Sin límite de tamaño de petición**: Flask no tenía `MAX_CONTENT_LENGTH`
    configurado, aceptando cuerpos de tamaño ilimitado. Corregido: 1 MB.
+5. **El aislamiento de la suite de pruebas no funcionaba de verdad**
+   (encontrado en la revisión final independiente antes de declarar v1.0):
+   `app.config['SQLALCHEMY_DATABASE_URI'] = ...` aplicado después de
+   `create_app()` no tenía ningún efecto, porque Flask-SQLAlchemy fija el
+   engine dentro de `db.init_app()`. Las 88 pruebas "aisladas" en realidad
+   corrían todas contra `backend/instance/encuentrau_dev.db`, la misma
+   base de datos de desarrollo manual — funcionaba solo por casualidad de
+   orden de ejecución secuencial. Corregido con un parámetro
+   `config_overrides` en `create_app()`, aplicado antes de inicializar las
+   extensiones; se agregó también `tests/integration/test_esquema_migraciones.py`
+   para detectar a futuro cualquier desincronización entre modelos y
+   migraciones de Alembic.
 
 ### Frontend — conectado por completo (eliminada la simulación)
 - `js/datos-temporales.js` eliminado. Las 9 páginas que dependían de él
@@ -90,7 +102,8 @@ sistema con backend, base de datos y frontend genuinamente integrados. Ver
   `docs/REGLAS_100.md` (100 reglas, ahora completas, con evidencia real).
 
 ### Pruebas — nuevo en v1.0 (v0.25 no tenía ninguna)
-- 88 pruebas de pytest (unitarias, integración, seguridad).
+- 89 pruebas de pytest (unitarias, integración, seguridad), con aislamiento
+  de base de datos confirmado real tras el bug #5 de arriba.
 - Verificación de extremo a extremo con navegador real (Playwright +
   Chromium): registro, login, reportar, buscar, coincidencias, solicitud,
   panel admin, gestión de reportes/solicitudes/usuarios, logout real.

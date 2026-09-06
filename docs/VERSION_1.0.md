@@ -24,7 +24,7 @@ Ver `docs/ARQUITECTURA.md`. Monolito de dos capas (frontend estático + backend 
 | Autenticación | VERIFICADO — Argon2id, rate limiting, tokens seguros, sesión, recuperación (sin correo real) |
 | Autorización | VERIFICADO — roles, ownership, whitelist, un admin no puede automodificarse |
 | Seguridad | VERIFICADO localmente (ver `docs/MATRIZ_SEGURIDAD.md`); HTTPS/producción real BLOQUEADO |
-| Pruebas | VERIFICADO — 88 pytest + 14 verificaciones E2E + 24 verificaciones manuales, toda con evidencia en `docs/evidencia/` |
+| Pruebas | VERIFICADO — 89 pytest + 14 verificaciones E2E + 24 verificaciones manuales, toda con evidencia en `docs/evidencia/`. Una revisión final independiente encontró y se corrigió un bug real de aislamiento en la suite (ver sección 12) |
 | Despliegue | PREPARADO, NO DESPLEGADO — bloqueado por autorización externa (ver `docs/DEPLOYMENT.md`) |
 | Documentación | VERIFICADO — completa y coincide con el código real |
 | REGLAS_100.md | COMPLETO — 100/100 reglas evaluadas con evidencia (86 VERIFICADO, 5 IMPLEMENTADO, 5 BLOQUEADO, 4 NO_APLICA, 0 PENDIENTE) |
@@ -104,7 +104,15 @@ Ver `docs/REGLAS_100.md`. Resumen: 86 VERIFICADO, 5 IMPLEMENTADO (guardrails de 
 ¿El administrador funciona desde Internet? **NO VERIFICADO** — solo desde localhost.
 ¿Las medidas de seguridad funcionan? **PROBADAS localmente** (ver `docs/MATRIZ_SEGURIDAD.md`); no probadas en un entorno de producción real por HTTPS.
 
-## 11. Próximo paso único y explícito
+## 11. Revisión final independiente
+
+Antes de declarar v1.0, se ejecutó una revisión crítica e independiente (persona "Revisor Final" definida en `.claude/agents/revisor-final.md`), en una sesión separada sin conocimiento previo de este trabajo, con instrucciones explícitas de ser crítica y no aprobar por defecto. La revisión ejecutó la suite de pytest de forma independiente, reprodujo la verificación E2E desde cero, comparó `docs/API.md` contra el código real de las rutas, y verificó por su cuenta los guardrails de producción.
+
+**Veredicto inicial: CONDICIONAL.** Encontró 4 problemas reales, todos menores (ninguno de seguridad ni de funcionalidad): dos afirmaciones de evidencia imprecisas en `docs/REGLAS_100.md` (RU-034 y RU-048 afirmaban "cero resultados" en una búsqueda que en realidad sí tenía coincidencias inocuas), un límite de tasa no documentado en `docs/API.md`, y — el hallazgo más significativo — que el mecanismo de aislamiento de base de datos entre pruebas de pytest no funcionaba de verdad (ver `CHANGELOG.md`, bug #5). Los 4 puntos se corrigieron y se reverificó la suite completa (89 passed) y la verificación E2E (14/14) después de la corrección.
+
+Este proceso es en sí mismo evidencia de que la regla de verificación del proyecto se sostiene bajo presión real: un chequeo independiente encontró una discrepancia real entre lo documentado y lo verdaderamente probado, y el problema se corrigió en vez de discutirse o minimizarse.
+
+## 12. Próximo paso único y explícito
 
 El proyecto está a un solo paso humano de tener una URL pública real:
 1. El propietario crea (o autoriza) un repositorio de GitHub y una cuenta de Render.
