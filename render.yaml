@@ -25,6 +25,8 @@ services:
     startCommand: "cd backend && flask db upgrade && gunicorn --workers 2 --bind 0.0.0.0:$PORT app:app"
     healthCheckPath: /health
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
       - key: FLASK_APP
         value: app.py
       - key: FLASK_ENV
