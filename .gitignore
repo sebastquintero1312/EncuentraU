@@ -20,3 +20,6 @@ htmlcov/
 # Editor
 .vscode/
 .idea/
+# Respaldos de la base de datos (contienen datos personales)
+database/respaldos/
+*.dump

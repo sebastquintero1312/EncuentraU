@@ -2,6 +2,7 @@ import logging
 from logging.config import fileConfig
 
 from flask import current_app
+from sqlalchemy import create_engine, pool
 
 from alembic import context
 
@@ -14,8 +15,20 @@ config = context.config
 fileConfig(config.config_file_name)
 logger = logging.getLogger('alembic.env')
 
+_engine_migraciones = None
+
 
 def get_engine():
+    # EncuentraU: las migraciones se ejecutan con el usuario DUEÑO de la base
+    # de datos (DATABASE_URL_MIGRACIONES), no con el usuario de permisos
+    # mínimos con el que corre la aplicación (DATABASE_URL), porque solo el
+    # dueño puede crear tablas, triggers y procedimientos (least privilege).
+    global _engine_migraciones
+    url_migraciones = current_app.config.get('URL_BD_MIGRACIONES')
+    if url_migraciones and url_migraciones != current_app.config.get('SQLALCHEMY_DATABASE_URI'):
+        if _engine_migraciones is None:
+            _engine_migraciones = create_engine(url_migraciones, poolclass=pool.NullPool)
+        return _engine_migraciones
     try:
         # this works with Flask-SQLAlchemy<3 and Alchemical
         return current_app.extensions['migrate'].db.get_engine()
