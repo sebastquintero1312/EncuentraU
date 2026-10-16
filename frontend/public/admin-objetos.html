@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Objetos · Administración · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-acceso="administrador" data-menu="objetos">
+  <header id="encabezado"></header>
+
+  <main>
+    <section class="hero hero-compacto">
+      <i class="fa-solid fa-boxes-stacked icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <h1>Todos los <span>reportes</span></h1>
+        <p>Consulta de solo lectura. Exporta los datos (sin información personal) para analizarlos en Excel u otras herramientas.</p>
+        <div class="acciones grupo-botones">
+          <a class="boton boton-primario" href="/api/admin/exportar/objetos.csv"><i class="fa-solid fa-file-csv" aria-hidden="true"></i> Exportar reportes (CSV)</a>
+          <a class="boton boton-claro" href="/api/admin/exportar/estadisticas-mensuales.csv"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Exportar estadísticas</a>
+        </div>
+      </div>
+    </section>
+
+    <div class="contenedor flotante">
+      <div class="panel panel-flotante">
+        <div class="buscador">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <label for="texto" class="solo-lectores">Buscar</label>
+          <input type="search" id="texto" maxlength="80" placeholder="Buscar por nombre o descripción…">
+        </div>
+        <div class="fila-filtros">
+          <div class="pildoras" id="pildoras-tipo" role="group" aria-label="Tipo">
+            <button type="button" class="pildora activa" data-tipo="">Todos</button>
+            <button type="button" class="pildora" data-tipo="encontrado">Encontrados</button>
+            <button type="button" class="pildora" data-tipo="perdido">Perdidos</button>
+          </div>
+          <label for="estado" class="solo-lectores">Estado</label>
+          <select id="estado"></select>
+          <label for="categoria" class="solo-lectores">Categoría</label>
+          <select id="categoria"></select>
+        </div>
+      </div>
+
+      <div class="tabla-contenedor mt-3">
+        <table class="tabla">
+          <thead><tr><th>Objeto</th><th>Tipo</th><th>Reportado por</th><th>Fecha</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="cuerpo-tabla"></tbody>
+        </table>
+      </div>
+      <div class="paginacion" id="paginacion"></div>
+    </div>
+  </main>
+
+  <footer id="pie"></footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/pagina-lista-objetos-oficina.js"></script>
+</body>
+</html>

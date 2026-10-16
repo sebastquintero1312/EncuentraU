@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de la oficina · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-acceso="encargado" data-menu="panel">
+  <header id="encabezado"></header>
+
+  <main>
+    <section class="hero">
+      <i class="fa-solid fa-clipboard-check icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <span class="etiqueta-seccion">Encargado de la oficina</span>
+        <h1>Oficina de objetos <span>perdidos</span></h1>
+        <p>Recibe los objetos que traen los estudiantes, compara las reclamaciones con los detalles privados y entrega en persona con carné y código.</p>
+      </div>
+    </section>
+
+    <div class="contenedor flotante">
+      <div class="rejilla rejilla-4">
+        <a class="indicador" href="encargado-objetos.html?estado=pendiente_entrega">
+          <div class="icono-circulo"><i class="fa-solid fa-truck-ramp-box" aria-hidden="true"></i></div>
+          <div><div class="valor" id="kpi-pendientes">—</div><div class="nombre">Por recibir</div></div>
+        </a>
+        <a class="indicador" href="encargado-reclamaciones.html">
+          <div class="icono-circulo"><i class="fa-solid fa-file-signature" aria-hidden="true"></i></div>
+          <div><div class="valor" id="kpi-reclamaciones">—</div><div class="nombre">Reclamaciones por revisar</div></div>
+        </a>
+        <a class="indicador" href="encargado-objetos.html?estado=reservado">
+          <div class="icono-circulo"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></div>
+          <div><div class="valor" id="kpi-reservados">—</div><div class="nombre">Esperando retiro</div></div>
+        </a>
+        <a class="indicador" href="encargado-objetos.html?tipo=encontrado&amp;estado=en_oficina">
+          <div class="icono-circulo"><i class="fa-solid fa-box-archive" aria-hidden="true"></i></div>
+          <div><div class="valor" id="kpi-custodia">—</div><div class="nombre">En custodia</div></div>
+        </a>
+      </div>
+    </div>
+
+    <section class="seccion">
+      <div class="contenedor rejilla rejilla-2">
+        <div class="panel">
+          <div class="panel-titulo">
+            <h2><i class="fa-solid fa-truck-ramp-box texto-naranja" aria-hidden="true"></i> Por recibir</h2>
+            <a class="boton boton-secundario boton-pequeno" href="encargado-objetos.html?estado=pendiente_entrega">Ver todos</a>
+          </div>
+          <p class="texto-suave texto-pequeno">Objetos que un estudiante reportó como encontrados. Confírmalos cuando te los entregue.</p>
+          <div id="lista-pendientes"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-titulo">
+            <h2><i class="fa-solid fa-file-signature texto-naranja" aria-hidden="true"></i> Reclamaciones por revisar</h2>
+            <a class="boton boton-secundario boton-pequeno" href="encargado-reclamaciones.html">Ver todas</a>
+          </div>
+          <p class="texto-suave texto-pequeno">Se atienden en orden de llegada.</p>
+          <div id="lista-reclamaciones"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="pie"></footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/pagina-panel-encargado.js"></script>
+</body>
+</html>

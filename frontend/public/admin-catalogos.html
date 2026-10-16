@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogos · Administración · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-acceso="administrador" data-menu="catalogos">
+  <header id="encabezado"></header>
+
+  <main>
+    <section class="hero hero-compacto">
+      <i class="fa-solid fa-sliders icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <h1>Catálogos y <span>reglas</span></h1>
+        <p>Categorías y lugares que aparecen en los formularios, y los límites del proceso de reclamación. Nada se borra: lo que ya no se usa se desactiva.</p>
+      </div>
+    </section>
+
+    <div class="contenedor flotante">
+      <div id="mensaje" class="alerta mb-2" aria-live="polite"></div>
+      <div class="rejilla rejilla-2">
+        <section class="panel panel-flotante">
+          <div class="panel-titulo"><h2><i class="fa-solid fa-tags texto-naranja" aria-hidden="true"></i> Categorías</h2></div>
+          <form id="form-categoria" class="grupo-botones mb-2" novalidate>
+            <label for="nueva-categoria" class="solo-lectores">Nueva categoría</label>
+            <input type="text" id="nueva-categoria" maxlength="50" placeholder="Nueva categoría">
+            <button type="submit" class="boton boton-primario boton-pequeno"><i class="fa-solid fa-plus" aria-hidden="true"></i> Agregar</button>
+          </form>
+          <ul class="lista-items" id="lista-categorias"></ul>
+        </section>
+
+        <section class="panel panel-flotante">
+          <div class="panel-titulo"><h2><i class="fa-solid fa-location-dot texto-naranja" aria-hidden="true"></i> Ubicaciones</h2></div>
+          <form id="form-ubicacion" class="grupo-botones mb-2" novalidate>
+            <label for="nueva-ubicacion" class="solo-lectores">Nueva ubicación</label>
+            <input type="text" id="nueva-ubicacion" maxlength="80" placeholder="Nueva ubicación">
+            <button type="submit" class="boton boton-primario boton-pequeno"><i class="fa-solid fa-plus" aria-hidden="true"></i> Agregar</button>
+          </form>
+          <ul class="lista-items" id="lista-ubicaciones"></ul>
+        </section>
+
+        <section class="panel columna-ancha">
+          <div class="panel-titulo"><h2><i class="fa-solid fa-gears texto-naranja" aria-hidden="true"></i> Reglas del proceso</h2></div>
+          <p class="texto-suave texto-pequeno">Estos valores los usan también los triggers y procedimientos de la base de datos: cambiarlos aquí cambia las reglas en todo el sistema.</p>
+          <div class="tabla-contenedor">
+            <table class="tabla">
+              <thead><tr><th>Regla</th><th>Rango permitido</th><th>Valor</th><th></th></tr></thead>
+              <tbody id="tabla-parametros"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer id="pie"></footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/pagina-admin-catalogos.js"></script>
+</body>
+</html>

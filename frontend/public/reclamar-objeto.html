@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reclamar objeto · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-acceso="estudiante" data-menu="buscar">
+  <header id="encabezado"></header>
+
+  <main>
+    <section class="hero hero-compacto">
+      <i class="fa-solid fa-user-secret icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <div class="migas"><a href="buscar-objetos.html">Objetos en la oficina</a> / Reclamar</div>
+        <h1>Demuestra que es <span>tuyo</span></h1>
+        <p>Describe el objeto como lo recuerdas. No te mostramos sus detalles a propósito: el encargado comparará lo que escribas con lo que tiene la oficina.</p>
+      </div>
+    </section>
+
+    <div class="contenedor flotante">
+      <div class="rejilla rejilla-3">
+        <div class="panel panel-flotante columna-ancha">
+          <div id="resumen-objeto" class="mb-2"></div>
+          <div id="mensaje" class="alerta" aria-live="polite"></div>
+
+          <form id="form-reclamar" class="formulario mt-2" novalidate>
+            <div class="campo form-group">
+              <label for="descripcion">¿Cómo es tu objeto? <span class="contador-caracteres" data-contador="descripcion"></span></label>
+              <textarea id="descripcion" name="descripcion" maxlength="500" required
+                placeholder="Marca, modelo, color, estuche o funda, stickers, rayones, qué tenía adentro, fondo de pantalla…"></textarea>
+              <span class="ayuda">Mínimo 20 caracteres. Mientras más detalles únicos des, más fácil será verificar que es tuyo.</span>
+              <span class="mensaje-error"></span>
+            </div>
+            <div class="fila">
+              <div class="campo form-group">
+                <label for="lugar">¿Dónde lo perdiste?</label>
+                <input type="text" id="lugar" name="lugar_perdida" maxlength="150" required placeholder="Ej: biblioteca, segundo piso">
+                <span class="mensaje-error"></span>
+              </div>
+              <div class="campo form-group">
+                <label for="fecha">¿Cuándo?</label>
+                <input type="date" id="fecha" name="fecha_perdida" required>
+                <span class="mensaje-error"></span>
+              </div>
+            </div>
+            <div class="campo form-group">
+              <label for="evidencia">¿Qué prueba puedes mostrar en la oficina? <span class="texto-suave">(opcional)</span></label>
+              <input type="text" id="evidencia" name="evidencia" maxlength="300" placeholder="Ej: lo desbloqueo con mi huella, tengo la factura, sé el IMEI">
+              <span class="mensaje-error"></span>
+            </div>
+            <div class="campo form-group">
+              <label for="reporte-perdida">¿Habías reportado esta pérdida? <span class="texto-suave">(opcional)</span></label>
+              <select id="reporte-perdida" name="reporte_perdida_id"></select>
+              <span class="ayuda">Si lo reportaste antes de que apareciera, es una evidencia fuerte: la fecha la registra el sistema y nadie puede cambiarla.</span>
+              <span class="mensaje-error"></span>
+            </div>
+            <label class="casilla">
+              <input type="checkbox" id="declaracion" required>
+              <span>Declaro que este objeto es mío. Entiendo que reclamar un objeto ajeno puede constituir una falta disciplinaria y que esta reclamación queda registrada con mi cuenta.</span>
+            </label>
+            <span class="mensaje-error" id="error-declaracion"></span>
+            <div class="grupo-botones">
+              <button type="submit" class="boton boton-primario" id="boton-enviar"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Enviar reclamación</button>
+              <a class="boton boton-secundario" id="enlace-volver" href="buscar-objetos.html">Volver</a>
+            </div>
+          </form>
+        </div>
+
+        <aside class="panel">
+          <h3><i class="fa-solid fa-route texto-naranja" aria-hidden="true"></i> ¿Qué sigue?</h3>
+          <ol class="texto-suave">
+            <li>Un encargado compara tu descripción con los detalles privados del objeto.</li>
+            <li>Si coincide, te avisamos por correo y entras a <strong>Mis reclamaciones</strong> a generar tu código de retiro.</li>
+            <li>Vas a la oficina con tu carné, tu código y una prueba de que es tuyo. Tienes 72 horas.</li>
+          </ol>
+          <div class="alerta alerta-advertencia mt-2"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <span>Puedes tener máximo 3 reclamaciones abiertas. Con 3 reclamaciones rechazadas, tu cuenta queda en revisión.</span>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <footer id="pie"></footer>
+
+  <script src="js/validaciones.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/pagina-reclamar.js"></script>
+</body>
+</html>

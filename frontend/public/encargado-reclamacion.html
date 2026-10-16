@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revisar reclamación · Oficina · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-acceso="encargado" data-menu="reclamaciones">
+  <header id="encabezado"></header>
+
+  <main>
+    <section class="hero hero-compacto">
+      <i class="fa-solid fa-scale-balanced icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <div class="migas"><a href="encargado-reclamaciones.html">Reclamaciones</a> / Revisión</div>
+        <h1>Verificación <span>a ciegas</span></h1>
+        <p>El estudiante escribió su descripción SIN ver los detalles privados. Compara ambas columnas antes de decidir.</p>
+      </div>
+    </section>
+
+    <div class="contenedor flotante">
+      <div id="mensaje" class="alerta mb-2" aria-live="polite"></div>
+      <div class="panel panel-flotante">
+        <div class="panel-titulo" id="cabecera-reclamacion"></div>
+        <div id="evidencias" class="grupo-botones mb-2"></div>
+        <div class="comparacion">
+          <div class="columna del-estudiante" id="columna-estudiante"></div>
+          <div class="columna de-la-oficina" id="columna-oficina"></div>
+        </div>
+      </div>
+
+      <div class="rejilla rejilla-2 mt-3" id="panel-decision">
+        <section class="panel">
+          <h3><i class="fa-solid fa-circle-check texto-naranja" aria-hidden="true"></i> Pre-aprobar</h3>
+          <p class="texto-suave texto-pequeno">La descripción coincide. El objeto queda reservado 72 horas y el estudiante debe retirarlo en persona con su carné, su código y una prueba.</p>
+          <form id="form-preaprobar" class="formulario" novalidate>
+            <div class="campo form-group">
+              <label for="respuesta">Mensaje para el estudiante (opcional)</label>
+              <textarea id="respuesta" name="respuesta" maxlength="300" placeholder="Ej: trae el cargador para comprobar que enciende"></textarea>
+              <span class="mensaje-error"></span>
+            </div>
+            <button type="submit" class="boton boton-primario boton-bloque" id="boton-preaprobar"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Pre-aprobar</button>
+          </form>
+        </section>
+        <section class="panel">
+          <h3><i class="fa-solid fa-circle-xmark texto-naranja" aria-hidden="true"></i> Rechazar</h3>
+          <p class="texto-suave texto-pequeno">La descripción no coincide o la prueba no fue suficiente. Con 3 rechazos la cuenta queda en revisión del administrador.</p>
+          <form id="form-rechazar" class="formulario" novalidate>
+            <div class="campo form-group">
+              <label for="motivo">Motivo (el estudiante lo verá)</label>
+              <textarea id="motivo" name="motivo" maxlength="300" required placeholder="Ej: el color y la marca no coinciden con el objeto"></textarea>
+              <span class="mensaje-error"></span>
+            </div>
+            <button type="submit" class="boton boton-peligro boton-bloque" id="boton-rechazar"><i class="fa-solid fa-circle-xmark" aria-hidden="true"></i> Rechazar</button>
+          </form>
+        </section>
+      </div>
+
+      <div class="panel mt-3 oculto" id="panel-otras">
+        <h3>Otras reclamaciones del mismo objeto</h3>
+        <div id="lista-otras"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer id="pie"></footer>
+
+  <script src="js/validaciones.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/pagina-encargado-reclamacion.js"></script>
+</body>
+</html>

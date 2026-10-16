@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <title>Confirmar correo · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-acceso="publico">
+  <header id="encabezado"></header>
+
+  <main>
+    <section class="hero hero-compacto">
+      <i class="fa-solid fa-envelope-circle-check icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <h1>Confirmación de <span>correo</span></h1>
+        <p>Así comprobamos que el correo institucional es realmente tuyo.</p>
+      </div>
+    </section>
+
+    <div class="contenedor flotante">
+      <div class="panel panel-flotante">
+        <div id="estado-verificacion" class="cargando"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Verificando tu enlace…</div>
+
+        <div id="verificacion-exitosa" class="oculto">
+          <div class="alerta alerta-exito"><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>¡Listo! Tu correo quedó verificado y tu cuenta está activa.</span></div>
+          <a class="boton boton-primario mt-2" href="login.html"><i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> Iniciar sesión</a>
+        </div>
+
+        <div id="verificacion-fallida" class="oculto">
+          <div id="mensaje-fallo" class="alerta alerta-error"></div>
+          <form id="form-reenvio" class="formulario mt-2" novalidate>
+            <div class="campo form-group">
+              <label for="correo">Pide un enlace nuevo con tu correo institucional</label>
+              <input type="email" id="correo" name="correo" maxlength="255" autocomplete="username" required>
+              <span class="mensaje-error"></span>
+            </div>
+            <div><button type="submit" class="boton boton-primario" id="boton-reenviar"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Enviar enlace nuevo</button></div>
+          </form>
+          <div id="mensaje-reenvio" class="alerta mt-2"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer id="pie"></footer>
+
+  <script src="js/validaciones.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/pagina-verificar-correo.js"></script>
+</body>
+</html>

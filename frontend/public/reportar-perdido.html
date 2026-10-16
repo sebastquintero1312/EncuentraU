@@ -3,82 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EncuentraU - Reportar objeto perdido</title>
+  <title>Reportar objeto perdido · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body data-tipo-reporte="perdido">
+<body data-acceso="estudiante" data-menu="reportes">
+  <header id="encabezado"></header>
 
-  <header class="navbar">
-    <div class="nav-container">
-      <a href="panel-ciudadano.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU</a>
-      <nav class="nav-links">
-        <a href="panel-ciudadano.html">Panel</a>
-        <a href="reportar-perdido.html">Reportar perdido</a>
-        <a href="reportar-encontrado.html">Reportar encontrado</a>
-        <a href="mis-reportes.html">Mis reportes</a>
-        <a href="buscar-objetos.html">Buscar objetos</a>
-        <a href="index.html">Cerrar sesión</a>
-      </nav>
-    </div>
-  </header>
+  <main>
+    <section class="hero hero-compacto">
+      <i class="fa-solid fa-magnifying-glass icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <div class="migas"><a href="panel-estudiante.html">Mi panel</a> / Reportar</div>
+        <h1 id="titulo-pagina">Perdí un <span>objeto</span></h1>
+        <p>Tu reporte es privado: solo lo ven tú y la oficina. Si llega a la oficina algo parecido, te avisamos por correo.</p>
+      </div>
+    </section>
 
-  <main class="container">
-    <div class="form-card ancho">
-      <h2>Reportar objeto perdido</h2>
+    <div class="contenedor flotante">
+      <div class="rejilla rejilla-3">
+        <div class="panel panel-flotante columna-ancha">
+          <div id="mensaje" class="alerta" aria-live="polite"></div>
+          <form id="form-reporte" class="formulario mt-2" data-tipo="perdido" novalidate>
+            <div class="campo form-group">
+              <label for="nombre">¿Qué perdiste?</label>
+              <input type="text" id="nombre" name="nombre" maxlength="120" placeholder="Ej: Celular, Chaqueta, Carné" required>
+              <span class="ayuda">Un nombre general, sin marca ni detalles.</span>
+              <span class="mensaje-error"></span>
+            </div>
+            <div class="fila">
+              <div class="campo form-group">
+                <label for="categoria">Categoría</label>
+                <select id="categoria" name="categoria_id" required></select>
+                <span class="mensaje-error"></span>
+              </div>
+              <div class="campo form-group">
+                <label for="fecha">¿Cuándo lo perdiste?</label>
+                <input type="date" id="fecha" name="fecha_evento" required>
+                <span class="mensaje-error"></span>
+              </div>
+            </div>
+            <div class="fila">
+              <div class="campo form-group">
+                <label for="ubicacion">¿Dónde crees que lo perdiste?</label>
+                <select id="ubicacion" name="ubicacion_id" required></select>
+                <span class="mensaje-error"></span>
+              </div>
+              <div class="campo form-group">
+                <label for="detalle-ubicacion">Más precisión <span class="texto-suave">(opcional)</span></label>
+                <input type="text" id="detalle-ubicacion" name="detalle_ubicacion" maxlength="150" placeholder="Ej: segundo piso, cerca de las ventanas">
+                <span class="mensaje-error"></span>
+              </div>
+            </div>
+            <div class="campo form-group">
+              <label for="descripcion">Descríbelo con detalle <span class="contador-caracteres" data-contador="descripcion"></span></label>
+              <textarea id="descripcion" name="descripcion" maxlength="500" required placeholder="Marca, modelo, color, señas particulares, stickers, contenido…"></textarea>
+              <span class="ayuda"><i class="fa-solid fa-lock" aria-hidden="true"></i> Privado: estos detalles demuestran que el objeto es tuyo. Nadie más los ve.</span>
+              <span class="mensaje-error"></span>
+            </div>
+            <div class="grupo-botones">
+              <button type="submit" class="boton boton-primario" id="boton-guardar"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Enviar reporte</button>
+              <a class="boton boton-secundario" href="mis-reportes.html">Cancelar</a>
+            </div>
+          </form>
+        </div>
 
-      <div class="mensaje-general-error" id="mensaje-general-error"></div>
-
-      <form id="form-reporte" novalidate>
-        <div class="form-group">
-          <label for="nombreObjeto">Nombre del objeto</label>
-          <input type="text" id="nombreObjeto" placeholder="Ej: Mochila azul">
-          <span class="mensaje-error"></span>
-        </div>
-        <div class="form-group">
-          <label for="categoria">Categoría</label>
-          <select id="categoria">
-            <option value="">Selecciona una categoría</option>
-            <option>Tecnología</option>
-            <option>Accesorios</option>
-            <option>Útiles</option>
-            <option>Documentos</option>
-            <option>Ropa</option>
-            <option>Otro</option>
-          </select>
-          <span class="mensaje-error"></span>
-        </div>
-        <div class="form-group">
-          <label for="descripcion">Descripción</label>
-          <textarea id="descripcion" rows="4" placeholder="Describe el objeto con el mayor detalle posible"></textarea>
-          <span class="mensaje-error"></span>
-        </div>
-        <div class="form-group">
-          <label for="ubicacion">Lugar donde lo perdiste</label>
-          <input type="text" id="ubicacion" placeholder="Ej: Biblioteca central">
-          <span class="mensaje-error"></span>
-        </div>
-        <div class="form-group">
-          <label for="fecha">Fecha aproximada</label>
-          <input type="date" id="fecha">
-          <span class="mensaje-error"></span>
-        </div>
-        <button type="submit" class="btn btn-primary" style="width:100%">Enviar reporte</button>
-      </form>
-
-      <div class="mensaje-confirmacion" id="mensaje-confirmacion">
-        Tu reporte fue registrado correctamente.
+        <aside class="panel">
+          <h3><i class="fa-solid fa-lightbulb texto-naranja" aria-hidden="true"></i> Consejos</h3>
+          <ul class="lista-ventajas texto-suave">
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i> Revisa primero <a href="buscar-objetos.html">si ya está en la oficina</a>.</li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i> Mientras más detalles privados des, más fácil será demostrar que es tuyo.</li>
+            <li><i class="fa-solid fa-check" aria-hidden="true"></i> Si lo reclamas después, vincula este reporte: la fecha en que lo reportaste es una evidencia que nadie puede falsificar.</li>
+          </ul>
+        </aside>
       </div>
     </div>
   </main>
 
-  <footer class="footer">
-    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
-  </footer>
+  <footer id="pie"></footer>
 
-  <script src="js/api.js"></script>
   <script src="js/validaciones.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/main.js"></script>
   <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
   <script src="js/pagina-reportar.js"></script>
 </body>
 </html>

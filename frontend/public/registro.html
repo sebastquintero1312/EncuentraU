@@ -3,92 +3,114 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EncuentraU - Registrarse</title>
+  <title>Crear cuenta · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body data-acceso="invitado">
+  <header id="encabezado"></header>
 
-  <header class="navbar">
-    <div class="nav-container">
-      <a href="index.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU</a>
-      <nav class="nav-links">
-        <a href="index.html">Inicio</a>
-        <a href="login.html">Iniciar sesión</a>
-        <a href="registro.html">Registrarse</a>
-      </nav>
-    </div>
-  </header>
+  <main class="acceso">
+    <section class="lado-marca">
+      <i class="fa-solid fa-user-plus icono-fondo" aria-hidden="true"></i>
+      <span class="etiqueta-seccion">Comunidad San Mateo</span>
+      <h1>Crea tu cuenta de <span>estudiante</span></h1>
+      <p>Solo con tu correo institucional. Te enviaremos un enlace para confirmar que el correo es tuyo: así cada reporte y cada reclamación tiene un responsable.</p>
+      <ul class="lista-ventajas">
+        <li><i class="fa-solid fa-envelope-circle-check" aria-hidden="true"></i> Solo correos @sanmateo.edu.co.</li>
+        <li><i class="fa-solid fa-lock" aria-hidden="true"></i> Tu contraseña se guarda cifrada con Argon2id: nadie puede leerla.</li>
+        <li><i class="fa-solid fa-user-graduate" aria-hidden="true"></i> Toda cuenta nueva es de estudiante. Los encargados los nombra un administrador.</li>
+      </ul>
+    </section>
 
-  <main class="container">
-    <div class="form-card ancho">
-      <img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-form">
-      <h2>Crear cuenta</h2>
-      <p class="subtitulo-form">Regístrate con tu correo institucional</p>
+    <section class="lado-formulario">
+      <div class="tarjeta-acceso">
+        <div id="registro-exitoso" class="oculto">
+          <div class="icono-circulo"><i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i></div>
+          <h2>Revisa tu correo</h2>
+          <p class="texto-suave" id="texto-exito"></p>
+          <p class="texto-suave">El enlace vence en 24 horas. Si no lo encuentras, busca en la carpeta de spam o pide uno nuevo desde la página de inicio de sesión.</p>
+          <a class="boton boton-primario" href="login.html"><i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> Ir a iniciar sesión</a>
+        </div>
 
-      <div class="mensaje-general-error" id="mensaje-general-error"></div>
+        <div id="bloque-formulario">
+          <span class="etiqueta-seccion">Registro</span>
+          <h2>Crear cuenta</h2>
+          <div id="mensaje" class="alerta" aria-live="polite"></div>
 
-      <form id="form-registro" novalidate>
-        <div class="form-group">
-          <label for="primerNombre">Primer nombre</label>
-          <input type="text" id="primerNombre">
-          <span class="mensaje-error"></span>
-        </div>
-        <div class="form-group">
-          <label for="segundoNombre">Segundo nombre (opcional)</label>
-          <input type="text" id="segundoNombre">
-          <span class="mensaje-error"></span>
-        </div>
-        <div class="form-group">
-          <label for="primerApellido">Primer apellido</label>
-          <input type="text" id="primerApellido">
-          <span class="mensaje-error"></span>
-        </div>
-        <div class="form-group">
-          <label for="segundoApellido">Segundo apellido (opcional)</label>
-          <input type="text" id="segundoApellido">
-          <span class="mensaje-error"></span>
-        </div>
-        <div class="form-group">
-          <label for="correo">Correo institucional</label>
-          <input type="email" id="correo" autocomplete="username">
-          <span class="mensaje-error"></span>
-        </div>
-        <div class="form-group">
-          <label for="contrasena">Contraseña</label>
-          <div class="campo-password">
-            <input type="password" id="contrasena" autocomplete="new-password">
-            <button type="button" class="btn-mostrar-password" id="btn-mostrar-contrasena">Mostrar</button>
+          <form id="form-registro" class="formulario mt-2" novalidate>
+            <div class="fila">
+              <div class="campo form-group">
+                <label for="primerNombre">Primer nombre</label>
+                <input type="text" id="primerNombre" name="primer_nombre" maxlength="80" autocomplete="given-name" required>
+                <span class="mensaje-error"></span>
+              </div>
+              <div class="campo form-group">
+                <label for="segundoNombre">Segundo nombre <span class="texto-suave">(opcional)</span></label>
+                <input type="text" id="segundoNombre" name="segundo_nombre" maxlength="80">
+                <span class="mensaje-error"></span>
+              </div>
+            </div>
+            <div class="fila">
+              <div class="campo form-group">
+                <label for="primerApellido">Primer apellido</label>
+                <input type="text" id="primerApellido" name="primer_apellido" maxlength="80" autocomplete="family-name" required>
+                <span class="mensaje-error"></span>
+              </div>
+              <div class="campo form-group">
+                <label for="segundoApellido">Segundo apellido <span class="texto-suave">(opcional)</span></label>
+                <input type="text" id="segundoApellido" name="segundo_apellido" maxlength="80">
+                <span class="mensaje-error"></span>
+              </div>
+            </div>
+            <div class="campo form-group">
+              <label for="correo">Correo institucional</label>
+              <input type="email" id="correo" name="correo" maxlength="255" autocomplete="username" placeholder="nombre.apellido@sanmateo.edu.co" required>
+              <span class="ayuda">Debe terminar en @sanmateo.edu.co</span>
+              <span class="mensaje-error"></span>
+            </div>
+            <div class="campo form-group">
+              <label for="contrasena">Contraseña</label>
+              <div class="campo-password">
+                <input type="password" id="contrasena" name="contrasena" maxlength="128" autocomplete="new-password" required>
+                <button type="button" class="btn-mostrar-password" id="btn-mostrar-contrasena">Mostrar</button>
+              </div>
+              <div class="medidor-fortaleza"><div class="barra" id="barra-fortaleza"></div></div>
+              <span class="etiqueta-fortaleza" id="etiqueta-fortaleza"></span>
+              <ul class="lista-requisitos" id="lista-requisitos"></ul>
+              <span class="mensaje-error"></span>
+            </div>
+            <div class="campo form-group">
+              <label for="confirmar">Confirmar contraseña</label>
+              <div class="campo-password">
+                <input type="password" id="confirmar" name="confirmar_contrasena" maxlength="128" autocomplete="new-password" required>
+                <button type="button" class="btn-mostrar-password" id="btn-mostrar-confirmar">Mostrar</button>
+              </div>
+              <span class="mensaje-error"></span>
+            </div>
+            <button type="submit" class="boton boton-primario boton-bloque" id="boton-registro">
+              <i class="fa-solid fa-user-plus" aria-hidden="true"></i> Crear mi cuenta
+            </button>
+          </form>
+
+          <div class="enlaces-acceso">
+            <span>¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></span>
           </div>
-          <div class="medidor-fortaleza"><div class="barra" id="barra-fortaleza"></div></div>
-          <span class="etiqueta-fortaleza" id="etiqueta-fortaleza"></span>
-          <ul class="lista-requisitos" id="lista-requisitos"></ul>
-          <span class="mensaje-error"></span>
         </div>
-        <div class="form-group">
-          <label for="confirmar">Confirmar contraseña</label>
-          <div class="campo-password">
-            <input type="password" id="confirmar" autocomplete="new-password">
-            <button type="button" class="btn-mostrar-password" id="btn-mostrar-confirmar">Mostrar</button>
-          </div>
-          <span class="mensaje-error"></span>
-        </div>
-        <button type="submit" class="btn btn-primary" id="btn-registro" style="width:100%">Registrarme</button>
-      </form>
-
-      <div class="form-links">
-        <p>¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></p>
       </div>
-    </div>
+    </section>
   </main>
 
-  <footer class="footer">
-    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
-  </footer>
+  <footer id="pie"></footer>
 
   <script src="js/validaciones.js"></script>
   <script src="js/contrasena-fortaleza.js"></script>
   <script src="js/api.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
   <script src="js/pagina-registro.js"></script>
 </body>
 </html>

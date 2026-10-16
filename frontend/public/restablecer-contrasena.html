@@ -3,75 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EncuentraU - Restablecer contraseña</title>
+  <meta name="referrer" content="no-referrer">
+  <title>Nueva contraseña · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body data-acceso="publico">
+  <header id="encabezado"></header>
 
-  <header class="navbar">
-    <div class="nav-container">
-      <a href="index.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU</a>
-      <nav class="nav-links">
-        <a href="index.html">Inicio</a>
-        <a href="login.html">Iniciar sesión</a>
-        <a href="registro.html">Registrarse</a>
-      </nav>
-    </div>
-  </header>
+  <main class="acceso">
+    <section class="lado-marca">
+      <i class="fa-solid fa-lock icono-fondo" aria-hidden="true"></i>
+      <span class="etiqueta-seccion">Recuperar acceso</span>
+      <h1>Crea una <span>contraseña</span> nueva</h1>
+      <p>El enlace que abriste sirve una sola vez. Al guardar, tu contraseña anterior deja de funcionar.</p>
+    </section>
 
-  <main class="container">
-    <div class="form-card">
-      <img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-form">
-      <h2>Elegir nueva contraseña</h2>
-      <p class="subtitulo-form">Este es el paso final de la recuperación: pega o abre el enlace que se generó para tu correo.</p>
-      <div class="aviso-simulado">Todavía no se envían correos reales; el token se imprime en la consola del backend Flask para poder probar el flujo. Pégalo aquí abajo.</div>
-
-      <div class="mensaje-general-error" id="mensaje-general-error"></div>
-
-      <form id="form-restablecer" novalidate>
-        <div class="form-group">
-          <label for="token">Token de recuperación</label>
-          <input type="text" id="token" placeholder="Pega aquí el token que recibiste">
-          <span class="mensaje-error"></span>
-        </div>
-        <div class="form-group">
-          <label for="contrasena">Nueva contraseña</label>
-          <div class="campo-password">
-            <input type="password" id="contrasena" autocomplete="new-password">
-            <button type="button" class="btn-mostrar-password" id="btn-mostrar-contrasena">Mostrar</button>
+    <section class="lado-formulario">
+      <div class="tarjeta-acceso">
+        <h2>Nueva contraseña</h2>
+        <div id="mensaje" class="alerta" aria-live="polite"></div>
+        <form id="form-restablecer" class="formulario mt-2" novalidate>
+          <div class="campo form-group">
+            <label for="contrasena">Contraseña nueva</label>
+            <div class="campo-password">
+              <input type="password" id="contrasena" name="contrasena" maxlength="128" autocomplete="new-password" required>
+              <button type="button" class="btn-mostrar-password" id="btn-mostrar-contrasena">Mostrar</button>
+            </div>
+            <div class="medidor-fortaleza"><div class="barra" id="barra-fortaleza"></div></div>
+            <span class="etiqueta-fortaleza" id="etiqueta-fortaleza"></span>
+            <ul class="lista-requisitos" id="lista-requisitos"></ul>
+            <span class="mensaje-error"></span>
           </div>
-          <div class="medidor-fortaleza"><div class="barra" id="barra-fortaleza"></div></div>
-          <span class="etiqueta-fortaleza" id="etiqueta-fortaleza"></span>
-          <ul class="lista-requisitos" id="lista-requisitos"></ul>
-          <span class="mensaje-error"></span>
-        </div>
-        <div class="form-group">
-          <label for="confirmar">Confirmar nueva contraseña</label>
-          <div class="campo-password">
-            <input type="password" id="confirmar" autocomplete="new-password">
-            <button type="button" class="btn-mostrar-password" id="btn-mostrar-confirmar">Mostrar</button>
+          <div class="campo form-group">
+            <label for="confirmar">Confirmar contraseña</label>
+            <input type="password" id="confirmar" name="confirmar_contrasena" maxlength="128" autocomplete="new-password" required>
+            <span class="mensaje-error"></span>
           </div>
-          <span class="mensaje-error"></span>
+          <button type="submit" class="boton boton-primario boton-bloque" id="boton-guardar">
+            <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar contraseña
+          </button>
+        </form>
+        <div class="enlaces-acceso">
+          <a href="login.html"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Volver a iniciar sesión</a>
         </div>
-        <button type="submit" class="btn btn-primary" id="btn-restablecer" style="width:100%">Cambiar contraseña</button>
-      </form>
-
-      <div class="mensaje-confirmacion" id="mensaje-confirmacion"></div>
-
-      <div class="form-links">
-        <p><a href="login.html">Volver a iniciar sesión</a></p>
       </div>
-    </div>
+    </section>
   </main>
 
-  <footer class="footer">
-    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
-  </footer>
+  <footer id="pie"></footer>
 
   <script src="js/validaciones.js"></script>
   <script src="js/contrasena-fortaleza.js"></script>
   <script src="js/api.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
   <script src="js/pagina-restablecer.js"></script>
 </body>
 </html>

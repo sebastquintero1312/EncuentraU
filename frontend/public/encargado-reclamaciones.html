@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reclamaciones · Oficina · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-acceso="encargado" data-menu="reclamaciones">
+  <header id="encabezado"></header>
+
+  <main>
+    <section class="hero hero-compacto">
+      <i class="fa-solid fa-scale-balanced icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <h1>Reclamaciones por <span>revisar</span></h1>
+        <p>Compara lo que describe cada estudiante con los detalles privados del objeto. Si coincide, pre-apruébala: la entrega final se hace en persona.</p>
+      </div>
+    </section>
+
+    <div class="contenedor flotante">
+      <div class="panel panel-flotante">
+        <div class="panel-titulo">
+          <div class="pildoras" id="pildoras-estado" role="group" aria-label="Estado">
+            <button type="button" class="pildora activa" data-estado="pendiente">Pendientes</button>
+            <button type="button" class="pildora" data-estado="preaprobada">Pre-aprobadas</button>
+            <button type="button" class="pildora" data-estado="rechazada">Rechazadas</button>
+            <button type="button" class="pildora" data-estado="entregada">Entregadas</button>
+            <button type="button" class="pildora" data-estado="todas">Todas</button>
+          </div>
+        </div>
+        <div id="lista-reclamaciones"></div>
+        <div class="paginacion" id="paginacion"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer id="pie"></footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/pagina-encargado-reclamaciones.js"></script>
+</body>
+</html>

@@ -12,9 +12,9 @@ const CONTRASENAS_COMUNES_FRONTEND = [
   'qwerty', 'qwerty123', 'admin123', 'contrasena', 'contraseña123',
 ];
 
-function evaluarContrasena(password, correo, nombre) {
+function evaluarContrasena(password) {
   const passwordMin = (password || '').toLowerCase();
-  const requisitos = {
+  return {
     longitud: password.length >= 12,
     mayuscula: /[A-Z]/.test(password),
     minuscula: /[a-z]/.test(password),
@@ -22,7 +22,6 @@ function evaluarContrasena(password, correo, nombre) {
     especial: /[!@#$%^&*()_\-+=]/.test(password),
     noComun: !CONTRASENAS_COMUNES_FRONTEND.includes(passwordMin),
   };
-  return requisitos;
 }
 
 function calcularFortaleza(requisitos) {
@@ -34,7 +33,7 @@ function calcularFortaleza(requisitos) {
 
 // Conecta un input de contraseña con la lista de requisitos (<ul>) y el
 // medidor de fortaleza (barra + etiqueta) para actualizarlos en tiempo real.
-function activarIndicadorContrasena(inputPassword, listaId, barraId, etiquetaId, correoInput, nombreInput) {
+function activarIndicadorContrasena(inputPassword, listaId, barraId, etiquetaId) {
   const lista = document.getElementById(listaId);
   const barra = document.getElementById(barraId);
   const etiqueta = document.getElementById(etiquetaId);
@@ -49,27 +48,21 @@ function activarIndicadorContrasena(inputPassword, listaId, barraId, etiquetaId,
   };
 
   function actualizar() {
-    const correo = correoInput ? correoInput.value : '';
-    const nombre = nombreInput ? nombreInput.value : '';
-    const requisitos = evaluarContrasena(inputPassword.value, correo, nombre);
-
-    lista.innerHTML = '';
-    Object.keys(textos).forEach(clave => {
-      const cumplido = requisitos[clave];
+    const requisitos = evaluarContrasena(inputPassword.value);
+    while (lista.firstChild) lista.removeChild(lista.firstChild);
+    Object.keys(textos).forEach((clave) => {
       const item = document.createElement('li');
-      item.className = cumplido ? 'cumplido' : '';
-      item.innerHTML = `<span class="marca">${cumplido ? '✓' : '○'}</span> ${textos[clave]}`;
+      item.textContent = textos[clave];
+      if (requisitos[clave]) item.className = 'cumple';
       lista.appendChild(item);
     });
 
     const nivel = calcularFortaleza(requisitos);
     const anchos = { debil: '33%', media: '66%', fuerte: '100%' };
     const etiquetas = { debil: 'Débil', media: 'Media', fuerte: 'Fuerte' };
-
     barra.className = 'barra ' + nivel;
     barra.style.width = inputPassword.value ? anchos[nivel] : '0%';
-    etiqueta.className = 'etiqueta-fortaleza ' + nivel;
-    etiqueta.textContent = inputPassword.value ? etiquetas[nivel] : '';
+    etiqueta.textContent = inputPassword.value ? `Fortaleza: ${etiquetas[nivel]}` : '';
   }
 
   inputPassword.addEventListener('input', actualizar);

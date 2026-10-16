@@ -3,55 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EncuentraU - Mis reportes</title>
+  <title>Mis reportes · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body data-acceso="estudiante" data-menu="reportes">
+  <header id="encabezado"></header>
 
-  <header class="navbar">
-    <div class="nav-container">
-      <a href="panel-ciudadano.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU</a>
-      <nav class="nav-links">
-        <a href="panel-ciudadano.html">Panel</a>
-        <a href="reportar-perdido.html">Reportar perdido</a>
-        <a href="reportar-encontrado.html">Reportar encontrado</a>
-        <a href="mis-reportes.html">Mis reportes</a>
-        <a href="buscar-objetos.html">Buscar objetos</a>
-        <a href="index.html">Cerrar sesión</a>
-      </nav>
-    </div>
-  </header>
+  <main>
+    <section class="hero hero-compacto">
+      <i class="fa-solid fa-list-check icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <h1>Mis <span>reportes</span></h1>
+        <p>Lo que reportaste como perdido o encontrado, y en qué va cada uno.</p>
+      </div>
+    </section>
 
-  <main class="container">
-    <h2 class="titulo-seccion">Mis reportes</h2>
-    <p class="subtitulo">Estos son los objetos que has reportado como perdidos o encontrados.</p>
-
-    <div class="tabla-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Objeto</th>
-            <th>Tipo</th>
-            <th>Ubicación</th>
-            <th>Fecha</th>
-            <th>Estado</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody id="cuerpo-tabla">
-          <!-- Las filas se llenan con JavaScript a partir de GET /api/mis-reportes -->
-        </tbody>
-      </table>
+    <div class="contenedor flotante">
+      <div class="panel panel-flotante">
+        <div class="panel-titulo">
+          <div class="pildoras" id="pildoras-tipo" role="group" aria-label="Tipo de reporte">
+            <button type="button" class="pildora activa" data-tipo="">Todos</button>
+            <button type="button" class="pildora" data-tipo="perdido">Perdidos</button>
+            <button type="button" class="pildora" data-tipo="encontrado">Encontrados</button>
+          </div>
+          <div class="grupo-botones">
+            <a class="boton boton-secundario boton-pequeno" href="reportar-perdido.html"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Perdí algo</a>
+            <a class="boton boton-primario boton-pequeno" href="reportar-encontrado.html"><i class="fa-solid fa-hand-holding-heart" aria-hidden="true"></i> Encontré algo</a>
+          </div>
+        </div>
+        <div id="lista-reportes"></div>
+        <div class="paginacion" id="paginacion"></div>
+      </div>
     </div>
   </main>
 
-  <footer class="footer">
-    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
-  </footer>
+  <footer id="pie"></footer>
 
   <script src="js/api.js"></script>
   <script src="js/main.js"></script>
   <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
   <script src="js/pagina-mis-reportes.js"></script>
 </body>
 </html>

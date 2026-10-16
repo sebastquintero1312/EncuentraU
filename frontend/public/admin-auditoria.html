@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auditoría · Administración · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-acceso="administrador" data-menu="auditoria">
+  <header id="encabezado"></header>
+
+  <main>
+    <section class="hero hero-compacto">
+      <i class="fa-solid fa-clipboard-list icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <h1>Auditoría de <span>cambios</span></h1>
+        <p>Cada inserción, modificación o borrado en las tablas importantes lo registra un trigger de PostgreSQL: quién, cuándo, desde qué IP y qué valores cambiaron. Este registro no se puede modificar ni borrar.</p>
+      </div>
+    </section>
+
+    <div class="contenedor flotante">
+      <div class="panel panel-flotante">
+        <form id="form-filtros" class="fila-filtros sin-borde" novalidate>
+          <label for="tabla" class="solo-lectores">Tabla</label>
+          <select id="tabla" name="tabla">
+            <option value="">Todas las tablas</option>
+            <option value="usuarios">Usuarios</option>
+            <option value="objetos">Objetos</option>
+            <option value="solicitudes">Reclamaciones</option>
+            <option value="entregas">Entregas</option>
+            <option value="tokens_usuario">Tokens (verificación y recuperación)</option>
+            <option value="categorias">Categorías</option>
+            <option value="ubicaciones">Ubicaciones</option>
+            <option value="parametros">Parámetros</option>
+          </select>
+          <label for="operacion" class="solo-lectores">Operación</label>
+          <select id="operacion" name="operacion">
+            <option value="">Todas las operaciones</option>
+            <option value="INSERT">Creación (INSERT)</option>
+            <option value="UPDATE">Modificación (UPDATE)</option>
+            <option value="DELETE">Borrado (DELETE)</option>
+          </select>
+          <label for="registro" class="texto-pequeno texto-suave">Registro #</label>
+          <input type="number" id="registro" name="registro_id" min="1">
+          <label for="desde" class="texto-pequeno texto-suave">Desde</label>
+          <input type="date" id="desde" name="desde">
+          <label for="hasta" class="texto-pequeno texto-suave">Hasta</label>
+          <input type="date" id="hasta" name="hasta">
+          <input type="hidden" id="usuario" name="usuario_id">
+          <input type="hidden" id="transaccion" name="transaccion_id">
+          <button type="submit" class="boton boton-primario boton-pequeno"><i class="fa-solid fa-filter" aria-hidden="true"></i> Filtrar</button>
+          <button type="button" class="boton boton-secundario boton-pequeno" id="boton-limpiar">Limpiar</button>
+        </form>
+        <div id="filtro-activo" class="mt-1"></div>
+      </div>
+
+      <div class="tabla-contenedor mt-3">
+        <table class="tabla">
+          <thead><tr><th>Fecha</th><th>Quién</th><th>Acción</th><th>Registro</th><th>Qué cambió</th></tr></thead>
+          <tbody id="cuerpo-tabla"></tbody>
+        </table>
+      </div>
+      <div class="paginacion" id="paginacion"></div>
+    </div>
+  </main>
+
+  <footer id="pie"></footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/pagina-admin-auditoria.js"></script>
+</body>
+</html>

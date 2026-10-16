@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuarios · Administración · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-acceso="administrador" data-menu="usuarios">
+  <header id="encabezado"></header>
+
+  <main>
+    <section class="hero hero-compacto">
+      <i class="fa-solid fa-users-gear icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <h1>Usuarios y <span>roles</span></h1>
+        <p>Nombra encargados de la oficina, desactiva cuentas y revisa las cuentas marcadas. Los administradores solo se crean desde la terminal del servidor.</p>
+      </div>
+    </section>
+
+    <div class="contenedor flotante">
+      <div class="panel panel-flotante">
+        <div class="buscador">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <label for="texto" class="solo-lectores">Buscar usuario</label>
+          <input type="search" id="texto" maxlength="80" placeholder="Buscar por nombre o correo…">
+        </div>
+        <div class="fila-filtros">
+          <div class="pildoras" id="pildoras-rol" role="group" aria-label="Rol">
+            <button type="button" class="pildora activa" data-rol="">Todos</button>
+            <button type="button" class="pildora" data-rol="estudiante">Estudiantes</button>
+            <button type="button" class="pildora" data-rol="encargado">Encargados</button>
+            <button type="button" class="pildora" data-rol="administrador">Administradores</button>
+          </div>
+          <label class="casilla"><input type="checkbox" id="solo-marcados"> <span>Solo cuentas en revisión</span></label>
+        </div>
+      </div>
+
+      <div id="mensaje" class="alerta mt-2" aria-live="polite"></div>
+      <div class="tabla-contenedor mt-2">
+        <table class="tabla">
+          <thead><tr><th>Usuario</th><th>Rol</th><th>Correo verificado</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="cuerpo-tabla"></tbody>
+        </table>
+      </div>
+      <div class="paginacion" id="paginacion"></div>
+    </div>
+  </main>
+
+  <footer id="pie"></footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/pagina-admin-usuarios.js"></script>
+</body>
+</html>

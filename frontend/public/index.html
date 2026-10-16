@@ -3,53 +3,154 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EncuentraU - Inicio</title>
+  <meta name="description" content="EncuentraU: la plataforma de la comunidad San Mateo para reportar y recuperar objetos perdidos de forma segura.">
+  <title>EncuentraU · Objetos perdidos y encontrados</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
-
-  <header class="navbar">
-    <div class="nav-container">
-      <a href="index.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU</a>
-      <nav class="nav-links">
-        <a href="index.html">Inicio</a>
-        <a href="login.html">Iniciar sesión</a>
-        <a href="registro.html">Registrarse</a>
-      </nav>
-    </div>
-  </header>
+<body data-acceso="publico" data-menu="inicio">
+  <header id="encabezado"></header>
 
   <main>
-    <section class="hero">
-      <img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-hero">
-      <h1>Encuentra lo que perdiste, devuelve lo que encontraste</h1>
-      <p>EncuentraU es la plataforma de la universidad para reportar y recuperar objetos perdidos o encontrados.</p>
-      <a href="login.html" class="btn btn-primary">Iniciar sesión</a>
-      <a href="registro.html" class="btn btn-secondary">Registrarse</a>
+    <section class="hero hero-inicio">
+      <i class="fa-solid fa-magnifying-glass-location icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <span class="etiqueta-seccion">Oficina de objetos perdidos</span>
+        <h1>Encuentra lo que <span>perdiste</span>, devuelve lo que <span>encontraste</span></h1>
+        <p>EncuentraU conecta a la comunidad San Mateo con la oficina de objetos perdidos. Cada objeto vuelve a su dueño real: verificamos la propiedad antes de entregarlo.</p>
+        <div class="acciones grupo-botones" id="acciones-hero">
+          <a class="boton boton-primario" href="registro.html"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Crear cuenta con mi correo institucional</a>
+          <a class="boton boton-claro" href="login.html"><i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> Ya tengo cuenta</a>
+        </div>
+        <div class="cifras-hero">
+          <div class="cifra-hero"><strong id="cifra-custodia">—</strong><span>objetos esperando a su dueño</span></div>
+          <div class="cifra-hero"><strong id="cifra-entregados">—</strong><span>objetos devueltos</span></div>
+        </div>
+      </div>
     </section>
 
-    <section class="container">
-      <div class="grid">
-        <div class="card">
-          <h3>Reporta un objeto perdido</h3>
-          <p>¿Perdiste algo dentro de la universidad? Crea un reporte con la descripción y el lugar.</p>
+    <section class="seccion" id="como-funciona">
+      <div class="contenedor">
+        <div class="seccion-titulo">
+          <span class="etiqueta-seccion">¿Cómo funciona?</span>
+          <h2>De perdido a <span class="texto-naranja">recuperado</span> en 4 pasos</h2>
+          <p>Todo pasa por la oficina de objetos perdidos: así cada objeto que ves en la búsqueda está físicamente allí y se entrega solo a quien demuestra que es suyo.</p>
         </div>
-        <div class="card">
-          <h3>Reporta un objeto encontrado</h3>
-          <p>¿Encontraste algo? Repórtalo para que su dueño pueda encontrarlo más fácil.</p>
+        <div class="rejilla rejilla-4">
+          <article class="tarjeta tarjeta-hover"><div class="cuerpo">
+            <div class="icono-circulo"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i></div>
+            <span class="paso-numero">Paso 1</span>
+            <h3>Reporta</h3>
+            <p>¿Perdiste algo? Repórtalo y te avisamos si llega algo parecido. ¿Encontraste algo? Repórtalo y llévalo a la oficina.</p>
+          </div></article>
+          <article class="tarjeta tarjeta-hover"><div class="cuerpo">
+            <div class="icono-circulo"><i class="fa-solid fa-box-archive" aria-hidden="true"></i></div>
+            <span class="paso-numero">Paso 2</span>
+            <h3>La oficina lo recibe</h3>
+            <p>Un encargado confirma que tiene el objeto. Solo entonces aparece en la búsqueda, con datos generales y sin detalles que lo identifiquen.</p>
+          </div></article>
+          <article class="tarjeta tarjeta-hover"><div class="cuerpo">
+            <div class="icono-circulo"><i class="fa-solid fa-user-secret" aria-hidden="true"></i></div>
+            <span class="paso-numero">Paso 3</span>
+            <h3>Reclama describiéndolo</h3>
+            <p>Cuéntanos cómo es tu objeto sin haber visto los detalles. El encargado compara tu descripción con lo que tiene la oficina.</p>
+          </div></article>
+          <article class="tarjeta tarjeta-hover"><div class="cuerpo">
+            <div class="icono-circulo"><i class="fa-solid fa-id-card" aria-hidden="true"></i></div>
+            <span class="paso-numero">Paso 4</span>
+            <h3>Retíralo en persona</h3>
+            <p>Si coincide, generas un código de retiro de un solo uso y lo recoges en la oficina con tu carné y una prueba de que es tuyo.</p>
+          </div></article>
         </div>
-        <div class="card">
-          <h3>Busca entre los reportes</h3>
-          <p>Consulta los objetos reportados y solicita la recuperación del tuyo.</p>
+      </div>
+    </section>
+
+    <section class="seccion seccion-blanca" id="seguridad">
+      <div class="contenedor">
+        <div class="seccion-titulo">
+          <span class="etiqueta-seccion">Seguridad</span>
+          <h2>¿Y si alguien dice que es <span class="texto-naranja">suyo</span>?</h2>
+          <p>Ver un objeto en la lista no basta para llevárselo. Varias capas de protección hacen que reclamar algo ajeno sea difícil, quede registrado y tenga consecuencias.</p>
+        </div>
+        <div class="rejilla rejilla-3">
+          <article class="tarjeta"><div class="cuerpo">
+            <div class="icono-circulo"><i class="fa-solid fa-eye-slash" aria-hidden="true"></i></div>
+            <h3>Verificación a ciegas</h3>
+            <p>Los detalles que identifican un objeto (marca, color, señas, contenido) nunca se publican. Quien lo reclama debe describirlos sin haberlos visto.</p>
+          </div></article>
+          <article class="tarjeta"><div class="cuerpo">
+            <div class="icono-circulo"><i class="fa-solid fa-envelope-circle-check" aria-hidden="true"></i></div>
+            <h3>Cuentas institucionales verificadas</h3>
+            <p>Solo se registran correos @sanmateo.edu.co y hay que confirmar el correo. Cada reclamación queda asociada a una persona identificable.</p>
+          </div></article>
+          <article class="tarjeta"><div class="cuerpo">
+            <div class="icono-circulo"><i class="fa-solid fa-key" aria-hidden="true"></i></div>
+            <h3>Código de un solo uso</h3>
+            <p>Aprobar no es entregar: el dueño genera un código de 6 dígitos y lo presenta en la oficina con su carné. Pocos intentos y vence en 72 horas.</p>
+          </div></article>
+          <article class="tarjeta"><div class="cuerpo">
+            <div class="icono-circulo"><i class="fa-solid fa-hand" aria-hidden="true"></i></div>
+            <h3>Límites contra el abuso</h3>
+            <p>Máximo 3 reclamaciones abiertas por persona. Con 3 reclamaciones rechazadas, la cuenta queda en revisión del administrador.</p>
+          </div></article>
+          <article class="tarjeta"><div class="cuerpo">
+            <div class="icono-circulo"><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i></div>
+            <h3>Separación de funciones</h3>
+            <p>Quien recibe y entrega objetos (encargado) no puede reclamarlos, y quien administra las cuentas no aprueba entregas.</p>
+          </div></article>
+          <article class="tarjeta"><div class="cuerpo">
+            <div class="icono-circulo"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i></div>
+            <h3>Todo queda registrado</h3>
+            <p>La base de datos guarda automáticamente quién cambió qué y cuándo. Ese registro no se puede modificar ni borrar.</p>
+          </div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="seccion" id="preguntas">
+      <div class="contenedor">
+        <div class="seccion-titulo">
+          <span class="etiqueta-seccion">Preguntas frecuentes</span>
+          <h2>Lo que más nos preguntan</h2>
+        </div>
+        <div class="rejilla rejilla-2">
+          <div class="panel">
+            <h3>¿Por qué no veo la descripción completa de los objetos?</h3>
+            <p class="texto-suave mb-0">Porque es justamente lo que demuestra que un objeto es tuyo. Si se publicara, cualquiera podría copiarla para reclamarlo.</p>
+          </div>
+          <div class="panel">
+            <h3>Encontré algo, ¿qué hago?</h3>
+            <p class="texto-suave mb-0">Repórtalo en EncuentraU y llévalo a la oficina de objetos perdidos. Te avisaremos cuando vuelva a su dueño.</p>
+          </div>
+          <div class="panel">
+            <h3>¿Cuánto tiempo tengo para recoger mi objeto?</h3>
+            <p class="texto-suave mb-0">Cuando tu reclamación es pre-aprobada tienes 72 horas para ir a la oficina con tu carné y tu código de retiro.</p>
+          </div>
+          <div class="panel">
+            <h3>¿Quién ve mis datos?</h3>
+            <p class="texto-suave mb-0">Solo el personal de la oficina. Los demás estudiantes nunca ven tu correo ni tus reportes de pérdida.</p>
+          </div>
+        </div>
+
+        <div class="franja-cta mt-4">
+          <div>
+            <h2>¿Perdiste algo en la universidad?</h2>
+            <p>Crea tu cuenta con tu correo institucional y repórtalo en un minuto.</p>
+          </div>
+          <a class="boton boton-oscuro" href="registro.html"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i> Empezar ahora</a>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="footer">
-    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
-  </footer>
+  <footer id="pie"></footer>
 
+  <script src="js/api.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/pagina-inicio.js"></script>
 </body>
 </html>

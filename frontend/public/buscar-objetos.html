@@ -3,66 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EncuentraU - Buscar objetos</title>
+  <title>Objetos en la oficina · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body data-acceso="estudiante" data-menu="buscar">
+  <header id="encabezado"></header>
 
-  <header class="navbar">
-    <div class="nav-container">
-      <a href="panel-ciudadano.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU</a>
-      <nav class="nav-links">
-        <a href="panel-ciudadano.html">Panel</a>
-        <a href="reportar-perdido.html">Reportar perdido</a>
-        <a href="reportar-encontrado.html">Reportar encontrado</a>
-        <a href="mis-reportes.html">Mis reportes</a>
-        <a href="buscar-objetos.html">Buscar objetos</a>
-        <a href="index.html">Cerrar sesión</a>
-      </nav>
-    </div>
-  </header>
+  <main>
+    <section class="hero">
+      <i class="fa-solid fa-box-open icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <h1>Objetos en la <span>oficina</span></h1>
+        <p>Todo lo que ves aquí está físicamente en la oficina de objetos perdidos. Por seguridad solo mostramos datos generales: para reclamar, describe tu objeto.</p>
+      </div>
+    </section>
 
-  <main class="container">
-    <h2 class="titulo-seccion">Buscar objetos</h2>
-    <p class="subtitulo">Consulta todos los reportes de la universidad.</p>
-
-    <div class="filtros">
-      <div class="form-group">
-        <label for="texto">Buscar por nombre</label>
-        <input type="text" id="texto" placeholder="Ej: mochila, celular...">
+    <div class="contenedor flotante">
+      <div class="panel panel-flotante">
+        <form id="form-busqueda" role="search">
+          <div class="buscador">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <label for="texto" class="solo-lectores">¿Qué perdiste?</label>
+            <input type="search" id="texto" maxlength="80" placeholder="¿Qué perdiste? Ej: celular, chaqueta, llaves…">
+          </div>
+          <div class="fila-filtros">
+            <div class="pildoras naranja" id="pildoras-categoria" role="group" aria-label="Categoría"></div>
+          </div>
+          <div class="fila-filtros">
+            <label class="solo-lectores" for="ubicacion">Ubicación</label>
+            <select id="ubicacion"></select>
+            <label class="texto-pequeno texto-suave" for="desde">Desde</label>
+            <input type="date" id="desde">
+            <label class="texto-pequeno texto-suave" for="hasta">Hasta</label>
+            <input type="date" id="hasta">
+            <button type="button" class="boton boton-secundario boton-pequeno" id="boton-limpiar"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Limpiar</button>
+          </div>
+        </form>
       </div>
-      <div class="form-group">
-        <label for="tipo">Tipo</label>
-        <select id="tipo">
-          <option value="">Todos</option>
-          <option value="perdido">Perdido</option>
-          <option value="encontrado">Encontrado</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="categoria">Categoría</label>
-        <select id="categoria">
-          <option value="">Todas</option>
-          <option>Tecnología</option>
-          <option>Accesorios</option>
-          <option>Útiles</option>
-          <option>Documentos</option>
-          <option>Ropa</option>
-          <option>Otro</option>
-        </select>
-      </div>
-      <button id="btn-buscar" class="btn btn-primary">Buscar</button>
     </div>
 
-    <div class="grid" id="resultados"></div>
+    <section class="seccion">
+      <div class="contenedor">
+        <p class="texto-suave" id="resumen-resultados" aria-live="polite"></p>
+        <div class="rejilla rejilla-3" id="resultados"></div>
+        <div class="paginacion" id="paginacion"></div>
+
+        <div class="franja-cta mt-4">
+          <div>
+            <h2>¿No está tu objeto?</h2>
+            <p>Repórtalo como perdido y te avisaremos por correo si llega algo parecido a la oficina.</p>
+          </div>
+          <a class="boton boton-oscuro" href="reportar-perdido.html"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Reportar pérdida</a>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <footer class="footer">
-    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
-  </footer>
+  <footer id="pie"></footer>
 
   <script src="js/api.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
   <script src="js/pagina-buscar-objetos.js"></script>
 </body>
 </html>

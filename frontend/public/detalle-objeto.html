@@ -3,39 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EncuentraU - Detalle del objeto</title>
+  <title>Detalle del objeto · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body data-acceso="estudiante" data-menu="buscar">
+  <header id="encabezado"></header>
 
-  <header class="navbar">
-    <div class="nav-container">
-      <a href="panel-ciudadano.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU</a>
-      <nav class="nav-links">
-        <a href="panel-ciudadano.html">Panel</a>
-        <a href="reportar-perdido.html">Reportar perdido</a>
-        <a href="reportar-encontrado.html">Reportar encontrado</a>
-        <a href="mis-reportes.html">Mis reportes</a>
-        <a href="buscar-objetos.html">Buscar objetos</a>
-        <a href="index.html">Cerrar sesión</a>
-      </nav>
-    </div>
-  </header>
+  <main>
+    <section class="hero hero-compacto">
+      <i class="fa-solid fa-box-open icono-fondo" aria-hidden="true" id="icono-hero"></i>
+      <div class="contenedor">
+        <div class="migas" id="migas"><a href="buscar-objetos.html">Objetos en la oficina</a> / Detalle</div>
+        <h1 id="titulo-objeto">Cargando…</h1>
+        <p id="subtitulo-objeto"></p>
+      </div>
+    </section>
 
-  <main class="container">
-    <div class="detalle-objeto" id="detalle">
-      <!-- Contenido llenado por JavaScript según el id en la URL -->
-      <p>Cargando...</p>
+    <div class="contenedor flotante">
+      <div id="mensaje" class="alerta mb-2" aria-live="polite"></div>
+      <div class="rejilla rejilla-3">
+        <div class="panel panel-flotante columna-ancha" id="panel-datos"></div>
+        <aside class="panel" id="panel-acciones"></aside>
+      </div>
+
+      <div class="panel mt-3 oculto" id="panel-coincidencias">
+        <div class="panel-titulo">
+          <h2><i class="fa-solid fa-wand-magic-sparkles texto-naranja" aria-hidden="true"></i> ¿Podría ser alguno de estos?</h2>
+        </div>
+        <p class="texto-suave">Objetos en la oficina parecidos a lo que perdiste (por categoría, lugar y fecha). Es solo una pista: para recuperarlo debes reclamarlo y describirlo.</p>
+        <div class="rejilla rejilla-3" id="lista-coincidencias"></div>
+      </div>
     </div>
   </main>
 
-  <footer class="footer">
-    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
-  </footer>
+  <footer id="pie"></footer>
 
   <script src="js/api.js"></script>
   <script src="js/main.js"></script>
   <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
   <script src="js/pagina-detalle-objeto.js"></script>
 </body>
 </html>

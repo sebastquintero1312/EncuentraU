@@ -3,73 +3,75 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EncuentraU - Panel del administrador</title>
+  <title>Panel del administrador · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body data-acceso="administrador" data-menu="panel">
+  <header id="encabezado"></header>
 
-  <header class="navbar">
-    <div class="nav-container">
-      <a href="panel-admin.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU <span class="badge-admin">Admin</span></a>
-      <nav class="nav-links">
-        <a href="panel-admin.html">Panel</a>
-        <a href="gestion-reportes.html">Gestión de reportes</a>
-        <a href="gestion-solicitudes.html">Gestión de solicitudes</a>
-        <a href="gestion-usuarios.html">Gestión de usuarios</a>
-        <a href="index.html">Cerrar sesión</a>
-      </nav>
-    </div>
-  </header>
+  <main>
+    <section class="hero">
+      <i class="fa-solid fa-user-shield icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <span class="etiqueta-seccion">Administrador</span>
+        <h1>Control y <span>supervisión</span></h1>
+        <p>Gestiona las cuentas y los catálogos, y revisa cómo trabaja la oficina. El administrador ve todo pero no opera objetos: así nadie aprueba y controla al mismo tiempo.</p>
+      </div>
+    </section>
 
-  <main class="container">
-    <h2 class="titulo-seccion">Panel de administración</h2>
-    <p class="subtitulo">Resumen general de la plataforma.</p>
-
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="numero" id="total-reportes">0</div>
-        <div class="etiqueta">Reportes totales</div>
-      </div>
-      <div class="stat-card">
-        <div class="numero" id="reportes-activos">0</div>
-        <div class="etiqueta">Reportes activos</div>
-      </div>
-      <div class="stat-card">
-        <div class="numero" id="total-usuarios">0</div>
-        <div class="etiqueta">Usuarios registrados</div>
-      </div>
-      <div class="stat-card">
-        <div class="numero" id="solicitudes-pendientes">0</div>
-        <div class="etiqueta">Solicitudes pendientes</div>
+    <div class="contenedor flotante">
+      <div class="rejilla rejilla-4">
+        <div class="indicador"><div class="icono-circulo"><i class="fa-solid fa-box-archive" aria-hidden="true"></i></div><div><div class="valor" id="kpi-custodia">—</div><div class="nombre">En custodia</div></div></div>
+        <div class="indicador"><div class="icono-circulo"><i class="fa-solid fa-handshake" aria-hidden="true"></i></div><div><div class="valor" id="kpi-entregados">—</div><div class="nombre">Entregados</div></div></div>
+        <div class="indicador"><div class="icono-circulo"><i class="fa-solid fa-file-signature" aria-hidden="true"></i></div><div><div class="valor" id="kpi-reclamaciones">—</div><div class="nombre">Reclamaciones pendientes</div></div></div>
+        <a class="indicador" href="admin-usuarios.html?marcados=1"><div class="icono-circulo"><i class="fa-solid fa-flag" aria-hidden="true"></i></div><div><div class="valor" id="kpi-revision">—</div><div class="nombre">Cuentas en revisión</div></div></a>
       </div>
     </div>
 
-    <div class="grid">
-      <div class="card">
-        <h3>Gestión de reportes</h3>
-        <p>Revisa y cambia el estado de los reportes de objetos.</p>
-        <a href="gestion-reportes.html" class="btn btn-primary btn-small">Ir a reportes</a>
+    <section class="seccion">
+      <div class="contenedor rejilla rejilla-2">
+        <div class="panel">
+          <div class="panel-titulo">
+            <h2><i class="fa-solid fa-chart-column texto-naranja" aria-hidden="true"></i> Actividad por mes</h2>
+            <a class="boton boton-secundario boton-pequeno" href="/api/admin/exportar/estadisticas-mensuales.csv"><i class="fa-solid fa-file-csv" aria-hidden="true"></i> Exportar</a>
+          </div>
+          <div class="leyenda"><span class="perdidos">Perdidos</span><span class="encontrados">Encontrados</span><span class="entregados">Entregados</span></div>
+          <div class="barras" id="barras-mensuales"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-titulo">
+            <h2><i class="fa-solid fa-flag texto-naranja" aria-hidden="true"></i> Cuentas en revisión</h2>
+            <a class="boton boton-secundario boton-pequeno" href="admin-usuarios.html?marcados=1">Gestionar</a>
+          </div>
+          <p class="texto-suave texto-pequeno">Estudiantes con varias reclamaciones rechazadas. No pueden reclamar hasta que revises su caso.</p>
+          <div id="lista-marcados"></div>
+        </div>
+        <div class="panel columna-ancha">
+          <div class="panel-titulo">
+            <h2><i class="fa-solid fa-people-group texto-naranja" aria-hidden="true"></i> Trabajo de los encargados</h2>
+            <a class="boton boton-secundario boton-pequeno" href="admin-auditoria.html"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Auditoría</a>
+          </div>
+          <p class="texto-suave texto-pequeno">Separación de funciones: un encargado que aprueba casi todo o entrega mucho más que sus compañeros es una señal para revisar su historial en la auditoría.</p>
+          <div class="tabla-contenedor">
+            <table class="tabla">
+              <thead><tr><th>Encargado</th><th>Recibidos</th><th>Pre-aprobaciones</th><th>Rechazos</th><th>Entregas</th><th>Horas promedio en custodia</th></tr></thead>
+              <tbody id="tabla-encargados"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <div class="card">
-        <h3>Gestión de solicitudes</h3>
-        <p>Aprueba o rechaza las solicitudes de reclamación de objetos.</p>
-        <a href="gestion-solicitudes.html" class="btn btn-primary btn-small">Ir a solicitudes</a>
-      </div>
-      <div class="card">
-        <h3>Gestión de usuarios</h3>
-        <p>Consulta los usuarios registrados y administra sus roles.</p>
-        <a href="gestion-usuarios.html" class="btn btn-primary btn-small">Ir a usuarios</a>
-      </div>
-    </div>
+    </section>
   </main>
 
-  <footer class="footer">
-    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
-  </footer>
+  <footer id="pie"></footer>
 
   <script src="js/api.js"></script>
   <script src="js/main.js"></script>
   <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
   <script src="js/pagina-panel-admin.js"></script>
 </body>
 </html>

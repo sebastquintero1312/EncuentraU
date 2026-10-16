@@ -3,62 +3,75 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EncuentraU - Iniciar sesión</title>
+  <title>Iniciar sesión · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body data-acceso="invitado" data-menu="login">
+  <header id="encabezado"></header>
 
-  <header class="navbar">
-    <div class="nav-container">
-      <a href="index.html" class="logo"><img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-img">EncuentraU</a>
-      <nav class="nav-links">
-        <a href="index.html">Inicio</a>
-        <a href="login.html">Iniciar sesión</a>
-        <a href="registro.html">Registrarse</a>
-      </nav>
-    </div>
-  </header>
+  <main class="acceso">
+    <section class="lado-marca">
+      <i class="fa-solid fa-key icono-fondo" aria-hidden="true"></i>
+      <span class="etiqueta-seccion">Bienvenido de nuevo</span>
+      <h1>Ingresa a <span>EncuentraU</span></h1>
+      <p>Un solo acceso para estudiantes, encargados de la oficina y administradores: cada uno ve solo lo que le corresponde.</p>
+      <ul class="lista-ventajas">
+        <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Sigue tus reportes y reclamaciones en tiempo real.</li>
+        <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Recibe avisos cuando llegue a la oficina algo parecido a lo que perdiste.</li>
+        <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Tus datos solo los ve el personal de la oficina.</li>
+      </ul>
+    </section>
 
-  <main class="container">
-    <div class="form-card">
-      <img src="img/logo-sanmateo.png" alt="Logo EncuentraU" class="logo-form">
-      <h2>Iniciar sesión</h2>
-      <p class="subtitulo-form">Entra con tu correo institucional</p>
+    <section class="lado-formulario">
+      <div class="tarjeta-acceso">
+        <span class="etiqueta-seccion">Iniciar sesión</span>
+        <h2>Accede con tu correo institucional</h2>
+        <p class="texto-suave">Usa el correo con el que creaste tu cuenta.</p>
 
-      <div class="mensaje-general-error" id="mensaje-general-error"></div>
-
-      <form id="form-login" novalidate>
-        <div class="form-group">
-          <label for="correo">Correo institucional</label>
-          <input type="email" id="correo" name="correo" autocomplete="username">
-          <span class="mensaje-error"></span>
+        <div id="mensaje" class="alerta" aria-live="polite"></div>
+        <div id="bloque-reenvio" class="alerta alerta-advertencia mt-2 oculto">
+          <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+          <span>¿No te llegó el correo de confirmación? <button type="button" class="boton boton-secundario boton-pequeno" id="boton-reenviar">Reenviar enlace</button></span>
         </div>
-        <div class="form-group">
-          <label for="contrasena">Contraseña</label>
-          <div class="campo-password">
-            <input type="password" id="contrasena" name="contrasena" autocomplete="current-password">
-            <button type="button" class="btn-mostrar-password" id="btn-mostrar-contrasena">Mostrar</button>
+
+        <form id="form-login" class="formulario mt-2" novalidate>
+          <div class="campo form-group">
+            <label for="correo">Correo institucional</label>
+            <input type="email" id="correo" name="correo" autocomplete="username" maxlength="255" placeholder="nombre.apellido@sanmateo.edu.co" required>
+            <span class="mensaje-error"></span>
           </div>
-          <span class="mensaje-error"></span>
-        </div>
-        <button type="submit" class="btn btn-primary" id="btn-login" style="width:100%">Iniciar sesión</button>
-      </form>
+          <div class="campo form-group">
+            <label for="contrasena">Contraseña</label>
+            <div class="campo-password">
+              <input type="password" id="contrasena" name="contrasena" autocomplete="current-password" maxlength="128" required>
+              <button type="button" class="btn-mostrar-password" id="btn-mostrar-contrasena">Mostrar</button>
+            </div>
+            <span class="mensaje-error"></span>
+          </div>
+          <button type="submit" class="boton boton-primario boton-bloque" id="boton-entrar">
+            <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> Iniciar sesión
+          </button>
+        </form>
 
-      <div class="form-links">
-        <p><a href="recuperar-contrasena.html">¿Olvidaste tu contraseña?</a></p>
-        <p>¿No tienes cuenta? <a href="registro.html">Regístrate</a></p>
+        <div class="enlaces-acceso">
+          <a href="recuperar-contrasena.html">¿Olvidaste tu contraseña?</a>
+          <span>¿No tienes cuenta? <a href="registro.html">Regístrate</a></span>
+        </div>
       </div>
-    </div>
+    </section>
   </main>
 
-  <footer class="footer">
-    <p>EncuentraU &copy; 2026 — Proyecto universitario</p>
-  </footer>
+  <footer id="pie"></footer>
 
   <script src="js/validaciones.js"></script>
   <script src="js/contrasena-fortaleza.js"></script>
   <script src="js/api.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
   <script src="js/pagina-login.js"></script>
 </body>
 </html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Objeto · Oficina · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-acceso="sesion" data-menu="objetos">
+  <header id="encabezado"></header>
+
+  <main>
+    <section class="hero hero-compacto">
+      <i class="fa-solid fa-box-open icono-fondo" aria-hidden="true" id="icono-hero"></i>
+      <div class="contenedor">
+        <div class="migas"><a href="encargado-objetos.html" id="enlace-lista">Objetos</a> / Detalle</div>
+        <h1 id="titulo-objeto">Cargando…</h1>
+        <p id="subtitulo-objeto"></p>
+      </div>
+    </section>
+
+    <div class="contenedor flotante">
+      <div id="mensaje" class="alerta mb-2" aria-live="polite"></div>
+      <div class="rejilla rejilla-3">
+        <div class="panel panel-flotante columna-ancha" id="panel-datos"></div>
+        <aside id="panel-acciones" class="rejilla"></aside>
+      </div>
+
+      <div class="panel mt-3" id="panel-solicitudes">
+        <div class="panel-titulo"><h2><i class="fa-solid fa-file-signature texto-naranja" aria-hidden="true"></i> Reclamaciones de este objeto</h2></div>
+        <div id="lista-solicitudes"></div>
+      </div>
+
+      <div class="panel mt-3 oculto" id="panel-coincidencias">
+        <div class="panel-titulo"><h2><i class="fa-solid fa-wand-magic-sparkles texto-naranja" aria-hidden="true"></i> Posibles coincidencias</h2></div>
+        <p class="texto-suave texto-pequeno" id="texto-coincidencias"></p>
+        <div id="lista-coincidencias"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer id="pie"></footer>
+
+  <script src="js/validaciones.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/pagina-oficina-objeto.js"></script>
+</body>
+</html>

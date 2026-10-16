@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notificaciones · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-acceso="sesion">
+  <header id="encabezado"></header>
+
+  <main>
+    <section class="hero hero-compacto">
+      <i class="fa-solid fa-bell icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <h1>Tus <span>avisos</span></h1>
+        <p>Todo lo que te enviamos por correo también queda aquí, por si algún mensaje cayó en spam.</p>
+      </div>
+    </section>
+
+    <div class="contenedor flotante">
+      <div class="panel panel-flotante">
+        <div class="panel-titulo">
+          <div class="pildoras" role="group" aria-label="Filtro">
+            <button type="button" class="pildora activa" data-filtro="">Todas</button>
+            <button type="button" class="pildora" data-filtro="1">Sin leer</button>
+          </div>
+          <button type="button" class="boton boton-secundario boton-pequeno" id="boton-leer-todas"><i class="fa-solid fa-check-double" aria-hidden="true"></i> Marcar todas como leídas</button>
+        </div>
+        <div id="lista-notificaciones"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer id="pie"></footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/pagina-notificaciones.js"></script>
+</body>
+</html>

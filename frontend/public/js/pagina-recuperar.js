@@ -1,36 +1,22 @@
-document.getElementById('form-recuperar').addEventListener('submit', async function (evento) {
-  evento.preventDefault();
+/* Solicitud de recuperación de contraseña. La respuesta es la misma exista o
+   no el correo (no se revela qué cuentas están registradas). */
 
-  const correo = document.getElementById('correo');
-  const boton = document.getElementById('btn-recuperar');
-  const mensajeConfirmacion = document.getElementById('mensaje-confirmacion');
-  limpiarError(correo);
-  let valido = true;
+sesionLista.then(() => {
+  const formulario = document.getElementById('form-recuperar');
+  const mensaje = document.getElementById('mensaje');
 
-  if (campoVacio(correo.value)) {
-    mostrarError(correo, 'El correo es obligatorio');
-    valido = false;
-  } else if (!correoValido(correo.value)) {
-    mostrarError(correo, 'Ingresa un correo válido');
-    valido = false;
-  }
+  formulario.addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+    const correo = document.getElementById('correo');
+    limpiarErroresCampos(formulario);
+    limpiarMensaje(mensaje);
+    if (!correoValido(correo.value.trim())) { mostrarError(correo, 'Escribe un correo válido'); return; }
 
-  if (!valido) return;
-
-  boton.disabled = true;
-  boton.textContent = 'Enviando...';
-
-  try {
+    const boton = document.getElementById('boton-recuperar');
+    bloquearBoton(boton, 'Enviando…');
     const resultado = await peticionSegura('/auth/recuperar', { correo: correo.value.trim() });
-    // Por seguridad, el backend SIEMPRE responde el mismo mensaje genérico,
-    // exista o no el correo. Así no se puede saber qué correos están registrados.
-    mensajeConfirmacion.textContent = resultado.datos.mensaje || 'Si el correo está registrado, recibirás instrucciones para continuar.';
-    mensajeConfirmacion.classList.add('visible');
-  } catch (error) {
-    mensajeConfirmacion.textContent = 'No se pudo conectar con el servidor. Verifica que el backend Flask esté corriendo.';
-    mensajeConfirmacion.classList.add('visible');
-  } finally {
-    boton.disabled = false;
-    boton.textContent = 'Enviar enlace de recuperación';
-  }
+    desbloquearBoton(boton);
+    mostrarMensaje(mensaje, resultado.ok ? 'info' : 'error', resultado.datos.mensaje);
+    if (resultado.ok) formulario.reset();
+  });
 });

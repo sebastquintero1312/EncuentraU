@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis reclamaciones · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-acceso="estudiante" data-menu="reclamaciones">
+  <header id="encabezado"></header>
+
+  <main>
+    <section class="hero hero-compacto">
+      <i class="fa-solid fa-file-signature icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <h1>Mis <span>reclamaciones</span></h1>
+        <p>Sigue cada reclamación. Cuando una esté pre-aprobada, genera aquí tu código de retiro y ve a la oficina con tu carné.</p>
+      </div>
+    </section>
+
+    <div class="contenedor flotante">
+      <div id="mensaje" class="alerta mb-2" aria-live="polite"></div>
+      <div id="lista-reclamaciones" class="rejilla"></div>
+      <div class="paginacion" id="paginacion"></div>
+    </div>
+  </main>
+
+  <div class="modal-fondo oculto" id="modal-codigo" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-codigo">
+    <div class="modal">
+      <h3 id="titulo-modal-codigo"><i class="fa-solid fa-key texto-naranja" aria-hidden="true"></i> Tu código de retiro</h3>
+      <p class="texto-suave">Díctalo en la oficina junto con tu carné. <strong>Anótalo ahora:</strong> por seguridad no lo volveremos a mostrar. Si lo pierdes, genera uno nuevo (el anterior dejará de servir).</p>
+      <div class="codigo-retiro" id="codigo-retiro"></div>
+      <p class="texto-suave texto-pequeno mt-2" id="vence-codigo"></p>
+      <div class="alerta alerta-advertencia mt-2"><i class="fa-solid fa-user-lock" aria-hidden="true"></i><span>No compartas este código con nadie: quien lo tenga podría intentar retirar tu objeto.</span></div>
+      <button type="button" class="boton boton-primario boton-bloque mt-3" id="cerrar-modal-codigo">Ya lo anoté</button>
+    </div>
+  </div>
+
+  <footer id="pie"></footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/pagina-mis-reclamaciones.js"></script>
+</body>
+</html>

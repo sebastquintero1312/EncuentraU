@@ -18,13 +18,12 @@
 // dominio absoluto ni CORS en producción.
 const API_BASE = '/api';
 
+const ERROR_DE_RED = { mensaje: 'No fue posible conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.' };
+
 let csrfTokenEnMemoria = null;
 
 async function obtenerCsrfToken() {
-  const respuesta = await fetch(`${API_BASE}/auth/csrf-token`, {
-    method: 'GET',
-    credentials: 'include',
-  });
+  const respuesta = await fetch(`${API_BASE}/auth/csrf-token`, { method: 'GET', credentials: 'include' });
   const datos = await respuesta.json();
   csrfTokenEnMemoria = datos.csrf_token;
   return csrfTokenEnMemoria;
@@ -40,35 +39,48 @@ function _actualizarCsrfSiVieneEnLaRespuesta(datos) {
 }
 
 // Petición GET simple, sin CSRF (las lecturas no lo necesitan).
-async function peticionGet(ruta) {
-  const respuesta = await fetch(`${API_BASE}${ruta}`, { credentials: 'include' });
-  const datos = await respuesta.json().catch(() => ({}));
-  return { ok: respuesta.ok, status: respuesta.status, datos };
+// `parametros` es un objeto opcional que se convierte en ?clave=valor
+// (URLSearchParams se encarga de codificar los valores).
+async function peticionGet(ruta, parametros) {
+  let url = `${API_BASE}${ruta}`;
+  if (parametros) {
+    const limpios = Object.entries(parametros).filter(([, v]) => v !== undefined && v !== null && v !== '');
+    if (limpios.length) url += '?' + new URLSearchParams(limpios).toString();
+  }
+  try {
+    const respuesta = await fetch(url, { credentials: 'include' });
+    const datos = await respuesta.json().catch(() => ({}));
+    return { ok: respuesta.ok, status: respuesta.status, datos };
+  } catch (error) {
+    return { ok: false, status: 0, datos: ERROR_DE_RED };
+  }
 }
 
 // Petición que modifica datos (POST/PUT/DELETE): siempre lleva CSRF.
 async function peticionProtegida(ruta, metodo, cuerpo) {
-  if (!csrfTokenEnMemoria) {
-    await obtenerCsrfToken();
+  try {
+    if (!csrfTokenEnMemoria) {
+      await obtenerCsrfToken();
+    }
+    const opciones = {
+      method: metodo,
+      credentials: 'include',
+      headers: { 'X-CSRFToken': csrfTokenEnMemoria },
+    };
+    if (cuerpo !== undefined) {
+      opciones.headers['Content-Type'] = 'application/json';
+      opciones.body = JSON.stringify(cuerpo);
+    }
+    const respuesta = await fetch(`${API_BASE}${ruta}`, opciones);
+    const datos = await respuesta.json().catch(() => ({}));
+    _actualizarCsrfSiVieneEnLaRespuesta(datos);
+    return { ok: respuesta.ok, status: respuesta.status, datos };
+  } catch (error) {
+    return { ok: false, status: 0, datos: ERROR_DE_RED };
   }
-
-  const opciones = {
-    method: metodo,
-    credentials: 'include',
-    headers: { 'X-CSRFToken': csrfTokenEnMemoria },
-  };
-  if (cuerpo !== undefined) {
-    opciones.headers['Content-Type'] = 'application/json';
-    opciones.body = JSON.stringify(cuerpo);
-  }
-
-  const respuesta = await fetch(`${API_BASE}${ruta}`, opciones);
-  const datos = await respuesta.json().catch(() => ({}));
-  _actualizarCsrfSiVieneEnLaRespuesta(datos);
-  return { ok: respuesta.ok, status: respuesta.status, datos };
 }
 
-// Alias histórico: POST protegido (login, registro, recuperar, restablecer lo usan así).
+// Alias: POST protegido (login, registro, recuperar, restablecer lo usan así).
 function peticionSegura(ruta, cuerpo) {
   return peticionProtegida(ruta, 'POST', cuerpo);
 }

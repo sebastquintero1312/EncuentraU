@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi panel · EncuentraU</title>
+  <link rel="icon" href="img/logo-sanmateo.png">
+  <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">
+  <link rel="stylesheet" href="vendor/fontawesome/css/solid.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-acceso="estudiante" data-menu="panel">
+  <header id="encabezado"></header>
+
+  <main>
+    <section class="hero">
+      <i class="fa-solid fa-graduation-cap icono-fondo" aria-hidden="true"></i>
+      <div class="contenedor">
+        <span class="etiqueta-seccion">Panel del estudiante</span>
+        <h1>Hola, <span id="nombre-estudiante">estudiante</span></h1>
+        <p>Desde aquí reportas lo que perdiste o encontraste y sigues tus reclamaciones.</p>
+      </div>
+    </section>
+
+    <div class="contenedor flotante" id="reportar">
+      <div class="rejilla rejilla-3">
+        <a class="tarjeta tarjeta-hover" href="reportar-perdido.html">
+          <div class="portada tono-1"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></div>
+          <div class="cuerpo">
+            <span class="etiqueta-seccion">Reportar</span>
+            <h3>Perdí un objeto</h3>
+            <p>Descríbelo con detalle: esos detalles son privados y te avisaremos si llega algo parecido a la oficina.</p>
+          </div>
+        </a>
+        <a class="tarjeta tarjeta-hover" href="reportar-encontrado.html">
+          <div class="portada tono-2"><i class="fa-solid fa-hand-holding-heart" aria-hidden="true"></i></div>
+          <div class="cuerpo">
+            <span class="etiqueta-seccion">Reportar</span>
+            <h3>Encontré un objeto</h3>
+            <p>Repórtalo y llévalo a la oficina de objetos perdidos para que su dueño pueda reclamarlo.</p>
+          </div>
+        </a>
+        <a class="tarjeta tarjeta-hover" href="buscar-objetos.html">
+          <div class="portada tono-3"><i class="fa-solid fa-box-open" aria-hidden="true"></i></div>
+          <div class="cuerpo">
+            <span class="etiqueta-seccion">Buscar</span>
+            <h3>¿Está en la oficina?</h3>
+            <p>Revisa los objetos que ya están en custodia y reclama el tuyo describiéndolo.</p>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <section class="seccion">
+      <div class="contenedor rejilla rejilla-2">
+        <div class="panel">
+          <div class="panel-titulo">
+            <h2><i class="fa-solid fa-file-signature texto-naranja" aria-hidden="true"></i> Mis reclamaciones</h2>
+            <a class="boton boton-secundario boton-pequeno" href="mis-reclamaciones.html">Ver todas</a>
+          </div>
+          <div id="lista-reclamaciones"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-titulo">
+            <h2><i class="fa-solid fa-bell texto-naranja" aria-hidden="true"></i> Avisos recientes</h2>
+            <a class="boton boton-secundario boton-pequeno" href="notificaciones.html">Ver todos</a>
+          </div>
+          <div id="lista-avisos"></div>
+        </div>
+        <div class="panel columna-ancha">
+          <div class="panel-titulo">
+            <h2><i class="fa-solid fa-list-check texto-naranja" aria-hidden="true"></i> Mis reportes recientes</h2>
+            <a class="boton boton-secundario boton-pequeno" href="mis-reportes.html">Ver todos</a>
+          </div>
+          <div id="lista-reportes"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="pie"></footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/sesion.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/pagina-panel-estudiante.js"></script>
+</body>
+</html>
