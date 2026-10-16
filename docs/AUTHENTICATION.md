@@ -1,39 +1,46 @@
-# AUTHENTICATION.md — Autenticación en EncuentraU v1.0
+# AUTHENTICATION.md — Autenticación de EncuentraU v2.0
 
-## Flujo
+Código: `backend/app/services/cuentas_service.py`, `auth_service.py`, `controllers/auth_controller.py`, `models/token_usuario.py`. Pruebas: `backend/tests/integration/test_auth.py`, `tests/unit/test_auth_service.py`, `tests/security/test_csrf_rate_limit.py`.
 
-1. **Registro** (`POST /api/auth/registro`): valida nombre, apellido, correo (formato + unicidad) y contraseña (política abajo). El rol se fija siempre en `ciudadano` — cualquier `rol` que envíe el cliente se ignora.
-2. **Login** (`POST /api/auth/login`): busca por correo, verifica el hash Argon2id, verifica que la cuenta esté `activo`. Mensaje de error idéntico si el correo no existe o si la contraseña es incorrecta (anti user-enumeration). Al iniciar sesión: `session.clear()` (anti session-fixation) → `session['usuario_id'] = usuario.id`. Como `session.clear()` también borra el token CSRF de la sesión anterior, la respuesta de login incluye un `csrf_token` nuevo (ver más abajo).
-3. **Sesión** (`GET /api/auth/sesion`): devuelve el usuario actual o `null`, sin filtrar si existe o no un `usuario_id` en la sesión.
-4. **Logout** (`POST /api/auth/logout`): `session.clear()` — invalida la sesión por completo. También devuelve un `csrf_token` nuevo.
-5. **Recuperación** (`POST /api/auth/recuperar` → `POST /api/auth/restablecer`): genera un token con `secrets.token_urlsafe(32)` (CSPRNG), válido 30 minutos, de un solo uso. El mensaje de "solicitud recibida" es siempre el mismo exista o no el correo. **El envío de correo real no está implementado**: el token se imprime en el log del servidor (`print(...)` en `auth_controller.solicitar_recuperacion`) — limitación conocida, documentada también en `SECURITY.md`.
+## 1. Registro
 
-## Contraseñas
+- Solo correos del dominio institucional (`DOMINIO_CORREO_INSTITUCIONAL`, por defecto `sanmateo.edu.co`). Un dominio que solo "termina parecido" (`falsosanmateo.edu.co`) se rechaza.
+- Toda cuenta nueva es **estudiante** y empieza con el correo **sin verificar**; el rol enviado por el cliente se ignora.
+- Contraseña: 12–128 caracteres, mayúscula, minúscula, número y carácter especial; no puede ser común ni contener el nombre o el correo. Se guarda con **Argon2id**.
+- **Sin enumeración de cuentas**: con datos válidos, la respuesta es idéntica exista o no el correo. Si ya existía, al dueño le llega un aviso por correo ("alguien intentó registrarse con tu correo"). El hash Argon2 se calcula en ambos casos, para que el tiempo de respuesta tampoco delate nada.
 
-- Hash: **Argon2id** (`argon2-cffi`), parámetros por defecto de la librería.
-- Política (validada en backend, `auth_service.validar_contrasena`): mínimo 12 caracteres, al menos una mayúscula, una minúscula, un número, un carácter especial (`!@#$%^&*()_-+=`), no debe ser una contraseña común (lista corta bloqueada), no debe contener el correo ni el nombre del usuario.
-- El frontend (`js/contrasena-fortaleza.js`) replica estas reglas solo como ayuda visual — **no es la autoridad**; el backend siempre revalida todo.
+## 2. Verificación del correo institucional
 
-## Sesión
+- Al registrarse se envía un enlace `verificar-correo.html?token=…` (vence en 24 h, un solo uso).
+- Sin verificar no se puede iniciar sesión: el login devuelve 403 con `codigo: "correo_no_verificado"`, **solo** si la contraseña es correcta (a quien prueba correos no le revela nada).
+- `POST /api/auth/reenviar-verificacion` emite un enlace nuevo e invalida el anterior (respuesta genérica, 3 cada 10 min).
+- Restablecer la contraseña con un enlace recibido en el buzón también deja el correo verificado.
+- `flask verificar-correo <correo>` permite verificarlo desde la terminal del servidor (desarrollo, o si la oficina confirmó la identidad en persona).
 
-- Cookie de sesión de Flask, firmada con `SECRET_KEY`.
-- `HttpOnly=True` (JS no puede leerla), `SameSite=Lax`, `Secure` solo en producción (`FLASK_ENV=production`).
-- `session.permanent = False`: expira al cerrar el navegador.
-- Solo se guarda `usuario_id` en la sesión — nunca contraseñas, tokens ni datos sensibles.
+## 3. Tokens de un solo uso
 
-## CSRF y el token que "desaparece" tras login/logout
+- Se generan con `secrets.token_urlsafe(32)`. En `tokens_usuario` se guarda **solo su hash SHA-256**: una copia robada de la base de datos no permite usar los enlaces (`test_en_la_base_solo_se_guarda_el_hash_del_token`).
+- Cada token tiene un propósito (`verificacion` o `recuperacion`) y no sirve para el otro.
+- Emitir un token nuevo invalida los pendientes del mismo propósito; usarlo lo marca como usado.
+- Las páginas que reciben un token lo borran de la barra de direcciones apenas lo leen (`history.replaceState`) y usan `<meta name="referrer" content="no-referrer">`.
 
-Flask-WTF guarda el `csrf_token` **dentro de la misma sesión** que `usuario_id`. Como el login y el logout llaman `session.clear()` (necesario para prevenir session fixation), cualquier CSRF token obtenido *antes* de esa llamada deja de ser válido. Para que el frontend no se rompa con la siguiente petición protegida:
+## 4. Recuperación de contraseña
 
-- `login` y `logout` generan y devuelven un `csrf_token` nuevo en su respuesta JSON.
-- `frontend/public/js/api.js` (`peticionProtegida`) actualiza automáticamente `csrfTokenEnMemoria` cada vez que una respuesta trae un `csrf_token`.
+`POST /api/auth/recuperar` → enlace `restablecer-contrasena.html?token=…` (30 min, un solo uso) → `POST /api/auth/restablecer`. La respuesta es genérica exista o no el correo. Si la contraseña nueva es débil, el token **no** se gasta y se puede reintentar.
 
-Este era un bug real en el diseño original de v0.25 (nunca se manifestó porque nadie probó una petición protegida inmediatamente después de un login) — encontrado y corregido durante la migración a v1.0. Ver `docs/evidencia/smoke_test_manual_v1.0.md` y `CHANGELOG.md`.
+## 5. Sesión
 
-## Qué falta (limitaciones conocidas)
+- Cookie de sesión de Flask firmada con `SECRET_KEY`: `HttpOnly`, `SameSite=Lax`, `Secure` en producción, sin fecha de expiración (se borra al cerrar el navegador). Guarda solo `usuario_id` (`test_la_sesion_solo_guarda_el_id_del_usuario`).
+- **Login regenera la sesión** (`session.clear()`): el token CSRF anterior deja de servir y se entrega uno nuevo (`test_login_regenera_la_sesion`). Logout también.
+- Cada petición protegida relee el usuario de la base de datos: una cuenta desactivada pierde el acceso de inmediato.
+- **CSRF** con Flask-WTF en todo `POST`/`PUT` (header `X-CSRFToken`).
+- **Límites de peticiones** (Flask-Limiter, por IP): login 10/min, registro 5/min, recuperar/restablecer 5/min, verificación 10/min, reenvío 3/10 min. Detrás del proxy de Render se usa la IP real gracias a `ProxyFix` (`NUM_PROXIES=1`). El almacenamiento del limitador es en memoria (se reinicia con el servidor).
 
-- No se envían correos reales (recuperación de contraseña, confirmación de cuenta).
-- No hay verificación de dominio institucional del correo (cualquier dirección con formato válido es aceptada).
-- No hay autenticación de dos factores.
+## 6. Correos
 
-Estas limitaciones están fuera del alcance definido para v1.0 por la propia auditoría inicial (`docs/ESTADO_V025.md`) y no bloquean la funcionalidad principal del sistema.
+`backend/app/services/correo_service.py`, según `CORREO_PROVEEDOR`:
+- `consola` (desarrollo): el correo se imprime en la terminal del servidor, enlace incluido.
+- `brevo` (obligatorio en producción): API HTTPS de Brevo (el plan gratuito de Render bloquea los puertos SMTP). *(IMPLEMENTADO, no probado contra Brevo todavía.)*
+- `memoria` (pruebas automáticas).
+
+Los correos son texto plano (un nombre de objeto escrito por un usuario no puede inyectar HTML). Un fallo de envío nunca rompe la operación: la notificación queda visible en la aplicación.

@@ -1,4 +1,4 @@
-﻿---
+---
 name: objetos-perdidos
 description: Guía para implementar la lógica de negocio principal de EncuentraU: reportes de objetos perdidos y encontrados, búsqueda, coincidencias y reclamaciones.
 ---
@@ -37,63 +37,27 @@ Un usuario cree que un objeto encontrado es suyo y inicia el proceso de verifica
 ### Verificación de propiedad
 Proceso de confirmar que un objeto pertenece a quien lo reclama. Puede requerir descripción de características únicas no públicas.
 
-## 4. Estados de los objetos
+## 4. Estados (v2.0, como DATOS en `estados_objeto` / `transiciones_objeto`)
 
-| Estado | Descripción | Quién puede establecerlo |
-|--------|-------------|--------------------------|
-| activo | Reporte activo buscando dueño/objeto | Sistema al crear |
-| en_proceso | Hay una solicitud pendiente de verificación | Sistema automático |
-| resuelto | El objeto fue devuelto a su dueño | Admin o sistema |
-| cerrado | Cerrado sin resolución (tiempo expirado, etc.) | Admin |
-| cancelado | Cancelado por el usuario que lo reportó | Usuario o Admin |
+**Objeto encontrado**: `pendiente_entrega` (reportado, falta llevarlo a la oficina) → `en_oficina` (el encargado lo recibió; recién aquí se publica) → `reservado` (reclamación pre-aprobada) → `entregado`. También `cancelado` (antes de llevarlo) y `cerrado` (por la oficina). `reservado → en_oficina` si la reserva vence, se rechaza o se cancela.
 
-### Transiciones permitidas
+**Objeto perdido**: `buscando` → `recuperado` (al entregarle un objeto con ese reporte vinculado) · `cancelado` · `cerrado`.
 
-```
-activo → en_proceso (cuando hay solicitud)
-activo → cancelado (el usuario cancela)
-en_proceso → resuelto (verificación exitosa)
-en_proceso → activo (solicitud rechazada)
-activo/en_proceso → cerrado (admin cierra)
-```
+Un trigger de PostgreSQL rechaza cualquier transición que no esté en `transiciones_objeto`.
 
-## 5. Estados de las solicitudes
+## 5. Estados de las reclamaciones
 
-| Estado | Descripción |
-|--------|-------------|
-| pendiente | Enviada, esperando revisión |
-| en_revision | Admin revisando |
-| aprobada | Verificación exitosa |
-| rechazada | No se pudo verificar propiedad |
-| cancelada | Cancelada por el solicitante |
+`pendiente` → `preaprobada` → `entregada`. Cierres: `rechazada` (cuenta para poner la cuenta en revisión), `cancelada`, `vencida`, `descartada` (el objeto se entregó a otra persona o se cerró).
 
-## 6. Reglas del negocio
+## 6. Reglas del negocio (v2.0)
 
-### Reportes
-1. Solo usuarios autenticados pueden crear reportes.
-2. Un usuario puede ver sus propios reportes.
-3. Todos los usuarios pueden ver los reportes activos de otros (información pública).
-4. Solo el dueño del reporte o un admin puede modificarlo.
-5. Solo el dueño del reporte o un admin puede cancelarlo.
-
-### Búsqueda
-1. La búsqueda es pública (no requiere autenticación).
-2. Se puede filtrar por: tipo, categoría, ubicación, fecha, estado.
-3. La búsqueda de texto es sobre nombre y descripción.
-
-### Coincidencias
-1. Una POSIBLE COINCIDENCIA es solo una sugerencia del sistema.
-2. La coincidencia NO transfiere propiedad automáticamente.
-3. El usuario debe iniciar una solicitud de reclamación.
-4. La solicitud pasa por verificación.
-
-### Solicitudes de reclamación
-1. Solo un usuario autenticado puede crear una solicitud.
-2. Un usuario no puede reclamar su propio reporte.
-3. Solo puede haber una solicitud activa por objeto por usuario.
-4. El solicitante debe describir características únicas del objeto.
-5. El admin revisa y aprueba o rechaza.
-6. Una aprobación cambia el estado del objeto a 'resuelto'.
+1. Solo estudiantes con correo verificado reportan y reclaman; el encargado y el administrador no.
+2. La búsqueda requiere sesión de estudiante y muestra solo objetos encontrados que están en la oficina, con datos públicos (nunca la descripción privada, ni se filtra por ella).
+3. Los reportes de pérdida no son públicos: los ven su dueño y la oficina.
+4. Reclamación a ciegas: el estudiante describe el objeto sin ver los detalles; el encargado compara.
+5. Una reclamación abierta por objeto y persona; máximo `max_solicitudes_abiertas`; con `max_rechazos` rechazos la cuenta queda en revisión.
+6. Pre-aprobar no es entregar: código de un solo uso (HMAC), `max_intentos_codigo` intentos, `horas_vigencia_retiro` horas, entrega presencial con carné y prueba (`sp_registrar_entrega`).
+7. Una coincidencia nunca transfiere propiedad ni cambia estados.
 
 ## 7. Qué debe revisar
 
@@ -117,20 +81,9 @@ activo/en_proceso → cerrado (admin cierra)
 - [ ] ¿Los resultados de búsqueda están paginados?
 - [ ] ¿Hay límite al número de resultados por página?
 
-## 8. Endpoints necesarios (v1.0)
+## 8. Endpoints
 
-| Método | Ruta | Descripción | Auth |
-|--------|------|-------------|------|
-| GET | /api/objetos | Listar/buscar objetos | No |
-| POST | /api/objetos | Crear reporte | Si |
-| GET | /api/objetos/:id | Ver detalle | No |
-| PUT | /api/objetos/:id | Actualizar reporte | Si (owner/admin) |
-| DELETE | /api/objetos/:id | Cancelar reporte | Si (owner/admin) |
-| GET | /api/mis-reportes | Mis reportes | Si |
-| POST | /api/solicitudes | Crear solicitud | Si |
-| GET | /api/mis-solicitudes | Mis solicitudes | Si |
-| GET | /api/admin/solicitudes | Ver todas | Si (admin) |
-| PUT | /api/admin/solicitudes/:id | Aprobar/rechazar | Si (admin) |
+Ver `docs/API.md` (verificado contra el código por `test_documentacion_api.py`).
 
 ## 9. Checklist de implementación
 

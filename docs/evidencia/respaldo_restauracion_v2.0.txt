@@ -1,0 +1,35 @@
+Evidencia: respaldo y restauracion de la base de datos (EncuentraU v2.0)
+Fecha: 2026-10-16 15:01 (hora de Colombia) - PostgreSQL 18.6 local
+
+1) Respaldo de encuentrau_dev:
+Respaldando en C:\dev\EncuentraU\database\respaldos\encuentrau_20261016_150112.dump ...
+Respaldo creado: encuentrau_20261016_150112.dump (98.2 KB)
+
+2) Restaurar SIN --confirmar (debe negarse):
+.\backend\venv\Scripts\python.exe : La restauración reemplaza TODO el contenido de la base destino. Vuelve a ejecutar 
+con --confirmar.
+En línea: 1 Carácter: 680
++ ... Name; $r0 = .\backend\venv\Scripts\python.exe database\scripts\restau ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (La restauración...on --confirmar.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+3) Restaurar en encuentrau_test con --confirmar:
+Restaurando encuentrau_20261016_150112.dump ...
+Restauración completa.
+IMPORTANTE: vuelve a ejecutar backend/migrations/sql/06_permisos.sql como dueño para restablecer los permisos de encuentrau_app (el respaldo se crea sin privilegios).
+
+4) Conteos en el ORIGINAL (encuentrau_dev):
+ usuarios | objetos | solicitudes | entregas | auditoria | triggers 
+----------+---------+-------------+----------+-----------+----------
+       12 |       9 |           3 |        3 |       115 |       19
+(1 fila)
+
+
+5) Conteos en la COPIA RESTAURADA (encuentrau_test):
+ usuarios | objetos | solicitudes | entregas | auditoria | triggers 
+----------+---------+-------------+----------+-----------+----------
+       12 |       9 |           3 |        3 |       115 |       19
+(1 fila)
+

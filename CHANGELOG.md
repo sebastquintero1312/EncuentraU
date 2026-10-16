@@ -1,5 +1,89 @@
 # Changelog de EncuentraU
 
+## EncuentraU v2.0 — PostgreSQL, tres roles, reclamación segura y rediseño
+
+Cambio mayor (rompe compatibilidad con v1.0: nuevos roles, nueva API, nuevo
+esquema). No se migraron datos: no había datos reales que conservar. Informe
+completo en `docs/VERSION_2.0.md`.
+
+### Base de datos (reescrita)
+- PostgreSQL en desarrollo, pruebas y producción; SQLite eliminado. La app no
+  arranca sin PostgreSQL.
+- Esquema en SQL legible (`backend/migrations/sql/`), aplicado por una única
+  migración transaccional `0001_esquema_v2`. Se eliminó la migración de v1.0.
+- Normalización a 3FN: catálogos `roles`, `estados_objeto`,
+  `transiciones_objeto`, `estados_solicitud`, `parametros`, `categorias`,
+  `ubicaciones`; tablas nuevas `entregas`, `notificaciones`, `auditoria`;
+  `tokens_recuperacion` pasa a `tokens_usuario` (solo hashes).
+- Triggers: máquina de estados, reglas contra el abuso de reclamaciones,
+  marcado de cuentas por rechazos, `updated_at`, auditoría de 8 tablas y
+  auditoría inmutable.
+- Procedimientos almacenados para recepción, pre-aprobación, rechazo, entrega
+  y cierre, con bloqueo de filas en orden fijo (ACID y concurrencia).
+- Concurrencia optimista con columna `version`.
+- Índices: FK, compuestos, parciales, únicos parciales, sobre expresión, GIN
+  de trigramas y BRIN.
+- Vistas de estadísticas e integración.
+- Dos usuarios de BD (dueño y aplicación con permisos mínimos y por columna),
+  Row Level Security y endurecimiento para Supabase.
+- Respaldo y restauración (`database/scripts/respaldo.py`, `restaurar.py`),
+  respaldo diario cifrado en GitHub Actions, usuario lector para BI.
+
+### Roles y reclamaciones
+- Roles `estudiante`, `encargado`, `administrador` (antes `ciudadano` y
+  `administrador`) con funciones separadas.
+- Nuevo proceso: el objeto encontrado se publica solo cuando la oficina lo
+  recibe; reclamación a ciegas; pre-aprobación; código de retiro de un solo
+  uso (HMAC, 5 intentos, 72 h); entrega presencial con carné y prueba; acta de
+  entrega; límites de reclamaciones; cuentas en revisión tras 3 rechazos.
+- Los administradores solo se crean con `flask crear-admin` (requiere correo
+  verificado). Nuevos comandos `flask verificar-correo` y `flask vencer-reservas`.
+
+### Cuentas y correo
+- Registro solo con correo `@sanmateo.edu.co` y verificación por enlace.
+- Registro, reenvío y recuperación sin enumeración de cuentas.
+- Envío de correos (consola en desarrollo, Brevo por API HTTPS en producción)
+  y notificaciones dentro de la aplicación.
+
+### Frontend (rediseño completo)
+- Estilo del sitio de la universidad (Poppins, naranja, azul marino), con
+  fuentes e íconos servidos localmente y contraste AA.
+- 25 páginas: paneles y pantallas propias para cada rol, comparación a ciegas,
+  código de retiro, auditoría, catálogos, notificaciones.
+- `js/layout.js` arma encabezado, menú y pie por rol; DOM construido sin
+  `innerHTML`; CSP sin `unsafe-inline`.
+- Eliminadas: `panel-ciudadano`, `gestion-reportes`, `gestion-solicitudes`,
+  `gestion-usuarios`, `solicitud-recuperacion` (reemplazadas por las nuevas).
+
+### Seguridad
+- `ProxyFix` configurable (IP real detrás de Render) para límites y auditoría.
+- `Cache-Control: no-store` en la API.
+- Guardrails de producción: Brevo y `URL_PUBLICA` https obligatorios.
+- Eliminado el campo `imagen_url`.
+
+### Bugs corregidos
+1. **Debug activado por defecto** (heredado de v1.0): `app.py` activaba el
+   debugger interactivo si `FLASK_ENV` no estaba definida. Ahora solo con
+   `FLASK_ENV=development` explícito.
+2. `generar_codigo_retiro` se tapaba a sí misma (nombre repetido con la
+   utilidad importada). Detectado por pytest antes de publicarse.
+
+### Pruebas y documentación
+- Suite reescrita sobre PostgreSQL real, con la app conectada como el usuario
+  de permisos mínimos; incluye pruebas de esquema, permisos, RLS, índices,
+  concurrencia con dos conexiones reales, configuración y una prueba que
+  compara `docs/API.md` con las rutas reales.
+- Verificación E2E reescrita para los tres roles con Microsoft Edge y
+  capturas en `docs/evidencia/capturas_v2/`.
+- Documentación actualizada: API, base de datos, autenticación, autorización,
+  arquitectura, backend, frontend, pruebas, despliegue, matriz OWASP,
+  diagramas y las 100 reglas.
+
+### Pendiente
+- Despliegue con Supabase + Render + Brevo (ver `docs/DEPLOYMENT.md`).
+
+---
+
 ## EncuentraU v1.0 — Base de datos real, núcleo funcional completo y seguridad verificada
 
 Migración completa de v0.25 (autenticación real en memoria + resto simulado) a un

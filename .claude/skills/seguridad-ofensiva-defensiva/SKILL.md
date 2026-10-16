@@ -1,4 +1,4 @@
-﻿---
+---
 name: seguridad-ofensiva-defensiva
 description: Guía para ejecutar pruebas de seguridad controladas sobre el propio proyecto EncuentraU. SOLO sobre localhost o entornos de prueba autorizados.
 ---
@@ -134,8 +134,8 @@ Intentar escalar privilegios enviando rol='administrador' en el body.
 ```
 
 ### Resultado esperado
-- El rol se ignora y el usuario se registra como 'ciudadano'.
-- Status 201 pero con rol='ciudadano' en la respuesta.
+- El rol se ignora y el usuario se registra como 'estudiante'.
+- Status 201 pero con rol='estudiante' en la respuesta.
 
 ## 8. Pruebas de tokens
 

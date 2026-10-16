@@ -1,72 +1,67 @@
-# TESTING.md — Pruebas de EncuentraU v1.0
+# TESTING.md — Pruebas de EncuentraU v2.0
 
 ## Resumen
 
-| Tipo | Herramienta | Cantidad | Evidencia |
+| Tipo | Herramienta | Dónde | Evidencia |
 |---|---|---|---|
-| Unitarias | pytest | 17 | `docs/evidencia/pytest_run_v1.0.txt` |
-| Integración | pytest + Flask test client | 55 | ídem |
-| Seguridad | pytest + Flask test client | 16 | ídem |
-| Extremo a extremo (E2E) | Playwright + Chromium real | 14 verificaciones | `docs/evidencia/e2e_navegador_v1.0.txt` |
-| Manual (servidor real + curl) | curl | 24 verificaciones | `docs/evidencia/smoke_test_manual_v1.0.md` |
+| Unitarias | pytest | `tests/unit/` | `docs/evidencia/pytest_v2.0.txt` |
+| Integración (API + PostgreSQL real) | pytest + Flask test client | `tests/integration/` | ídem |
+| Base de datos (esquema, triggers, permisos, RLS, índices) | pytest + conexión directa | `tests/integration/test_esquema_bd.py` | ídem |
+| Concurrencia (dos conexiones simultáneas) | pytest + psycopg2 + hilos | `tests/integration/test_concurrencia.py` | ídem |
+| Seguridad ofensiva | pytest | `tests/security/` | ídem |
+| Extremo a extremo con navegador real | Playwright + Microsoft Edge | `tests/e2e/verificacion_navegador.py` | `docs/evidencia/e2e_navegador_v2.0.txt` + `capturas_v2/` |
+| Respaldo y restauración | `respaldo.py` / `restaurar.py` | `database/scripts/` | `docs/evidencia/respaldo_restauracion_v2.0.txt` |
 
-**88 pruebas de pytest, todas ejecutadas y pasando**, más las verificaciones manuales/E2E. Ninguna se marca como exitosa sin haberse ejecutado realmente (regla de verificación, `CLAUDE.md`).
+El número exacto de pruebas y su resultado está al final de `docs/evidencia/pytest_v2.0.txt` (no se copia aquí para que no quede desactualizado).
 
 ## Cómo ejecutar
 
-```bash
+```powershell
 cd backend
-python -m venv venv && venv\Scripts\activate
-pip install -r requirements-dev.txt
-set FLASK_APP=app.py
-flask db upgrade
-pytest -v                                     # suite completa (rápida, ~25s, BD temporal aislada por prueba)
-python tests/e2e/verificacion_navegador.py    # requiere: 1) servidor real corriendo (`python app.py`)
-                                               #           2) base de datos limpia antes de correr
+venv\Scripts\python.exe -m pytest -q                         # suite completa
+venv\Scripts\python.exe tests\e2e\verificacion_navegador.py  # navegador real (levanta el servidor solo)
 ```
 
-## Estructura
+Requisitos: las bases `encuentrau_test` (pytest) y `encuentrau_dev` migrada (E2E), creadas con `database/scripts/crear_bd_local.sql` (ver README).
 
-```
-backend/tests/
-├── conftest.py               # fixtures: app, client, usuario_a, cliente_b, cliente_admin
-├── unit/
-│   ├── test_auth_service.py       # validación de contraseñas, hashing Argon2id
-│   └── test_objetos_service.py    # validación de datos de un reporte
-├── integration/
-│   ├── test_auth.py               # registro, login, logout, recuperación, restablecimiento
-│   ├── test_objetos.py            # CRUD de reportes, búsqueda, coincidencias, IDOR
-│   ├── test_solicitudes.py        # proceso completo de reclamación
-│   └── test_admin.py              # panel de administración (usuarios y objetos)
-├── security/
-│   ├── test_csrf_rate_limit.py    # CSRF requerido/válido, rate limiting real
-│   └── test_ofensivas.py          # SQLi, XSS, IDOR, tokens, payloads oversized, JSON malformado
-└── e2e/
-    └── verificacion_navegador.py  # Playwright: flujo completo con un navegador real
-```
+## Cómo funciona el aislamiento
 
-## Por qué dos niveles (pytest + Playwright)
+- **PostgreSQL real**, el mismo esquema que producción, en una base aparte (`TEST_DATABASE_URL`). `conftest.py` se niega a correr si esa URL no apunta a una base cuyo nombre contenga "test" o si coincide con la de desarrollo: las pruebas **borran** todo.
+- Al empezar: `DROP SCHEMA public CASCADE` y la migración real en ambos sentidos (`upgrade` → `downgrade` → `upgrade`), así se prueba también `00_eliminar.sql`.
+- Antes de cada prueba: `TRUNCATE` de las tablas y recarga de `05_datos_iniciales.sql`. Para vaciar la auditoría, el dueño desactiva un momento el trigger que lo impide (la aplicación no puede hacerlo: `test_la_aplicacion_no_tiene_permiso`).
+- **La aplicación corre con el usuario de permisos mínimos** (`encuentrau_app`), igual que en producción: si faltara un permiso, las pruebas fallarían.
+- No se deja un `app_context` abierto durante la prueba: cada petición crea su propio contexto y su propia sesión de base de datos, como en producción.
+- Los usuarios de prueba se crean por el camino real (registro → correo → enlace de verificación → login). Los correos van a la lista `CORREOS_ENVIADOS` (proveedor `memoria`) y las pruebas leen los enlaces de ahí.
+- CSRF y límites de peticiones están desactivados salvo en `tests/security/test_csrf_rate_limit.py`, que crea su propia app con ellos activos.
 
-`pytest` usa el *test client* de Flask: llama directamente a las vistas de Python, sin pasar por un navegador real ni ejecutar JavaScript. Es rápido y perfecto para probar el backend, pero **no puede detectar** un bug de JavaScript, un `id` de elemento mal escrito, una `Content-Security-Policy` que bloquee un script, o que un botón realmente dispare la petición esperada. Por eso además existe `tests/e2e/verificacion_navegador.py`, que abre un Chromium real (vía Playwright), navega, hace clic y escribe como lo haría una persona, contra un servidor Flask real. Esta combinación fue justamente la que reveló los 3 bugs reales corregidos durante esta migración (ver `CHANGELOG.md`): dos los encontró pytest (token tratado como diccionario tras migrar a ORM; CSRF sin manejador específico devolviendo 500), y el tercero (CSRF invalidado tras login) se encontró primero con `curl` contra el servidor real, antes incluso de escribir la suite de pytest.
+## Qué cubre
 
-## Aislamiento
+| Archivo | Cubre |
+|---|---|
+| `unit/test_auth_service.py` | contraseñas, dominio institucional, Argon2id |
+| `unit/test_seguridad_y_utilidades.py` | tokens, HMAC del código, validación de enteros/fechas, escape de comodines, celdas CSV |
+| `unit/test_config.py` | guardrails de configuración y de producción, modo debug |
+| `unit/test_documentacion_api.py` | `docs/API.md` coincide con las rutas reales |
+| `integration/test_auth.py` | registro sin enumeración, verificación de correo, login, sesión, cookie, recuperación |
+| `integration/test_roles.py` | matriz de permisos ruta por ruta para los tres roles |
+| `integration/test_objetos.py` | reportes, visibilidad pública/privada, versión (409), ownership, coincidencias |
+| `integration/test_reclamaciones.py` | flujo completo y medidas contra reclamaciones falsas (límites, rechazos, código, vencimiento, cierres, auditoría) |
+| `integration/test_admin.py` | usuarios/roles, catálogos, parámetros, auditoría, estadísticas, CSV |
+| `integration/test_notificaciones.py` | avisos, correo, IDOR, enlaces internos |
+| `integration/test_esquema_bd.py` | esquema, CHECK/FK, triggers, auditoría inmutable, permisos mínimos, RLS, índices (incluye `EXPLAIN`) |
+| `integration/test_concurrencia.py` | bloqueo de filas con dos conexiones reales, índice único parcial, atomicidad, concurrencia optimista |
+| `security/test_ofensivas.py` | inyección SQL, XSS, payloads grandes o con tipos inesperados, mass assignment, IDOR, fuga de hashes, cabeceras |
+| `security/test_csrf_rate_limit.py` | CSRF, regeneración de sesión, límites de peticiones |
+| `e2e/verificacion_navegador.py` | el flujo completo con los tres roles en un navegador real, sin errores de JavaScript/CSP, XSS, open redirect, vista móvil |
 
-- Cada prueba de pytest usa una base de datos SQLite temporal propia (`tempfile.mkstemp`), creada desde cero y borrada al terminar — ninguna prueba depende de datos dejados por otra. **Confirmado empíricamente**: correr la suite completa con `backend/instance/` vacío deja esa carpeta vacía al terminar (el archivo de desarrollo nunca se toca).
-- `WTF_CSRF_ENABLED` y `RATELIMIT_ENABLED` están desactivados por defecto para no interferir con pruebas que no los están probando específicamente; se activan explícitamente solo en `tests/security/test_csrf_rate_limit.py`.
-- La verificación E2E requiere una base de datos limpia (recomendado: borrar `backend/instance/encuentrau_dev.db` antes de correrla) porque usa correos de prueba fijos.
+## Bugs reales que encontraron las pruebas en v2.0
 
-### Bug real corregido: el aislamiento de arriba no funcionaba hasta la revisión final
+1. **Nombre repetido** en `solicitudes_service.py`: la función `generar_codigo_retiro(solicitud)` tapaba a la utilidad importada con el mismo nombre (`TypeError` al generar un código). Lo detectaron 12 pruebas de reclamaciones.
+2. **Debug activado por defecto** (heredado de v1.0): `app.py` activaba el debugger interactivo cuando `FLASK_ENV` **no** estaba definida, al revés de lo que decía su comentario. Corregido con `modo_debug_permitido()` y `test_debug_solo_con_development_explicito`.
 
-Durante la revisión final independiente previa a declarar v1.0 (ver `CHANGELOG.md`), se encontró que `app.config['SQLALCHEMY_DATABASE_URI'] = ...` **aplicado después de `create_app()`** no tenía ningún efecto real: Flask-SQLAlchemy resuelve y fija el engine dentro de `db.init_app()` (llamado dentro de `create_app()`), así que cualquier cambio posterior a `app.config` se ignoraba. Esto significaba que **las 88 pruebas "aisladas" en realidad corrían contra `backend/instance/encuentrau_dev.db`** (la misma base de datos usada en desarrollo manual), confiando únicamente en que cada prueba hiciera `drop_all()`/`create_all()` de forma secuencial para no pisarse entre sí — funcionaba por casualidad de orden de ejecución, no por diseño, y se habría roto con ejecución en paralelo (`pytest-xdist`) o con cualquier prueba que no limpiara correctamente. El mismo problema afectaba a `RATELIMIT_ENABLED` (Flask-Limiter también fija su estado en `init_app()`, no lo relee dinámicamente).
+## Limitaciones
 
-**Corrección**: `create_app()` ahora acepta un parámetro `config_overrides` (dict) que se aplica *antes* de `db.init_app()`/`limiter.init_app()`, no después. `conftest.py` y las pruebas de rate limiting se actualizaron para pasar la configuración de esta forma. Verificado borrando `backend/instance/encuentrau_dev.db` antes de correr la suite completa y confirmando que la carpeta queda vacía al terminar (antes de la corrección, el archivo se recreaba con cada corrida de pytest).
-
-## Cobertura por funcionalidad
-
-Ver `docs/REGLAS_100.md` para el detalle regla por regla con su evidencia específica citada (qué archivo de test o qué inspección de código respalda cada una).
-
-## Limitaciones conocidas
-
-- No se ha probado contra PostgreSQL real (solo SQLite en desarrollo y en la suite de pruebas) — bloqueado por no existir todavía un despliegue en producción (ver `docs/DEPLOYMENT.md`).
-- No hay pruebas de carga/rendimiento (fuera del alcance de v1.0 para un proyecto académico).
-- La verificación E2E cubre el camino principal de cada flujo; no cubre exhaustivamente cada combinación de error posible (esas sí están cubiertas por pytest).
+- Todas las pruebas se ejecutaron en un servidor PostgreSQL 18.6 local temporal creado con los mismos scripts del proyecto. Falta repetirlas en el servidor PostgreSQL del propietario y en Supabase (versión 15/17).
+- El flujo de GitHub Actions (`.github/workflows/pruebas.yml`) está escrito pero no se ha ejecutado: el código todavía no se ha subido.
+- El envío real por Brevo y el despliegue (HTTPS, Gunicorn, ProxyFix detrás de Render) no se han probado.
+- No hay pruebas de carga.

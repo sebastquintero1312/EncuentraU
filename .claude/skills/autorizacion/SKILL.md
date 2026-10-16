@@ -1,4 +1,4 @@
-﻿---
+---
 name: autorizacion
 description: Guía para implementar y revisar el sistema de autorización de EncuentraU: roles, permisos, ownership y protección contra escalamiento de privilegios.
 ---
@@ -21,8 +21,11 @@ Guiar la implementación y revisión del sistema de autorización de Encумен
 
 | Rol | Descripción | Permisos |
 |-----|-------------|---------|
-| ciudadano | Usuario registrado | CRUD de sus propios reportes, ver reportes de otros, solicitar recuperación de objetos |
-| administrador | Administrador del sistema | Todo lo anterior + gestión de usuarios, moderación de reportes, gestión de solicitudes |
+| estudiante | Cuenta nueva (correo institucional verificado) | Reportar objetos, editar/cancelar los propios, buscar objetos en la oficina (solo datos públicos), reclamar y generar código de retiro |
+| encargado | Personal de la oficina (lo nombra un administrador) | Ver todos los reportes con detalles privados, recibir objetos, pre-aprobar/rechazar reclamaciones, entregar, cerrar. NO reporta ni reclama |
+| administrador | Control (solo se crea con `flask crear-admin`) | Usuarios y roles, catálogos, parámetros, auditoría, estadísticas, exportación. Consulta todo pero NO opera objetos |
+
+Matriz completa y medidas contra reclamaciones falsas: `docs/AUTHORIZATION.md`. Decoradores reales: `estudiante_requerido`, `encargado_requerido`, `admin_requerido`, `login_requerido` (`backend/app/middlewares/autorizacion.py`).
 
 ## 4. Principios fundamentales
 
@@ -32,7 +35,7 @@ Un endpoint sin verificación de autorización es un endpoint ABIERTO.
 
 ### Least Privilege
 Cada usuario accede solo a lo que necesita.
-Los ciudadanos no ven datos de otros usuarios que no sean públicos.
+Los estudiantes no ven datos de otros usuarios que no sean públicos.
 
 ### El frontend nunca es la autoridad
 Ocultar un botón en el HTML no es autorización.
@@ -62,8 +65,8 @@ El backend SIEMPRE verifica permisos, independientemente de lo que el frontend m
 - [ ] ¿Los campos permitidos están explícitamente listados?
 
 ### Escalamiento de privilegios
-- [ ] ¿Puede un ciudadano acceder a rutas de admin?
-- [ ] ¿Puede un ciudadano modificar el rol de su propia cuenta?
+- [ ] ¿Puede un estudiante o un encargado acceder a rutas de admin?
+- [ ] ¿Puede alguien modificar el rol de su propia cuenta o crear administradores desde la web?
 - [ ] ¿Las rutas de admin requieren verificación de rol en el backend?
 
 ## 6. Reglas obligatorias

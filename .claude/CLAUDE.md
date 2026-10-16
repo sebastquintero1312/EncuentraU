@@ -6,24 +6,22 @@
 
 ## Versión actual
 
-**v0.25**
+**v2.0**
 
-Estado: Backend Flask con autenticación funcional en memoria. Frontend HTML/CSS/JS con datos simulados. Sin base de datos real conectada.
+Estado: Flask + PostgreSQL (triggers, procedimientos, auditoría, permisos mínimos, RLS), tres roles (estudiante, encargado, administrador), reclamación con verificación a ciegas y código de retiro, verificación de correo institucional, frontend rediseñado con el estilo de sanmateo.edu.co. Verificado localmente (ver `docs/VERSION_2.0.md`). NO desplegado.
 
-## Versión objetivo
+## Siguiente objetivo
 
-**v1.0**
-
-Estado: PENDIENTE DE IMPLEMENTACIÓN. No comenzar hasta completar la auditoría de v0.25.
+Despliegue: Supabase (PostgreSQL) + Render (web) + Brevo (correos). Ver `docs/DEPLOYMENT.md`.
 
 ---
 
 ## Regla de continuidad
 
-**No comenzar desde cero.** La v0.25 existe y tiene trabajo real. Cada transformación debe partir del análisis de lo que ya hay, conservar lo que funciona bien, y mejorar o reemplazar solo lo que sea necesario.
+**No comenzar desde cero.** La versión actual existe y tiene trabajo real. Cada transformación debe partir del análisis de lo que ya hay, conservar lo que funciona bien, y mejorar o reemplazar solo lo que sea necesario.
 
 Antes de cualquier cambio, leer:
-- `docs/ESTADO_V025.md`
+- `docs/VERSION_2.0.md`
 - `docs/ARQUITECTURA.md`
 - La Skill correspondiente a la tarea
 
@@ -164,22 +162,15 @@ Está terminada cuando:
 
 ---
 
-## Tecnología actual (v0.25)
+## Tecnología actual (v2.0)
 
-- Frontend: HTML + CSS + JavaScript vanilla
-- Backend: Python + Flask
-- Base de datos: NINGUNA (datos en memoria — se pierden al reiniciar)
-- Autenticación: Flask session + werkzeug hashing (scrypt)
-- Seguridad activa: Flask-Limiter, Flask-WTF (CSRF), Flask-CORS
-
-## Tecnología objetivo (v1.0)
-
-- Frontend: HTML + CSS + JavaScript vanilla (conservar identidad visual)
-- Backend: Python + Flask (conservar y expandir)
-- Base de datos: SQLAlchemy + SQLite (desarrollo) / PostgreSQL (producción)
-- Autenticación: Flask session + Argon2id
-- ORM: SQLAlchemy
+- Frontend: HTML + CSS + JavaScript vanilla (estilo de sanmateo.edu.co; fuentes e íconos locales; CSP estricta)
+- Backend: Python 3.11 + Flask
+- Base de datos: PostgreSQL en todos los entornos (SQLAlchemy + Alembic; esquema en `backend/migrations/sql/`)
+- Autenticación: Flask session + Argon2id + verificación de correo institucional
+- Roles: estudiante, encargado, administrador (separación de funciones)
+- Seguridad activa: Flask-Limiter, Flask-WTF (CSRF), Flask-CORS, ProxyFix configurable, usuario de BD con permisos mínimos, RLS, auditoría por triggers
 
 ---
 
-*Última actualización: Fase 0 — Infraestructura de desarrollo (preparación v0.25 → v1.0)*
+*Última actualización: v2.0 (2026-10-16)*

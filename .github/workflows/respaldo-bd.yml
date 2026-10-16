@@ -1,0 +1,89 @@
+# Respaldo diario de la base de datos de producción (Supabase) en la nube.
+#
+# Supabase gratuito no ofrece respaldos descargables, así que GitHub Actions
+# ejecuta database/scripts/respaldo.py una vez al día, CIFRA el resultado y
+# lo guarda como "artifact" del flujo durante 30 días.
+#
+# Por qué cifrado: si el repositorio es público, cualquiera con cuenta de
+# GitHub puede descargar los artifacts. El respaldo contiene correos y
+# hashes de contraseñas, así que se cifra con AES-256 usando una frase que
+# solo conoce el dueño del proyecto.
+#
+# Secretos necesarios (Settings > Secrets and variables > Actions):
+#   SUPABASE_DB_URL     URL del usuario dueño, usando el POOLER de Supabase
+#                       (modo "Session", puerto 5432): los runners de GitHub
+#                       no tienen IPv6 y la conexión directa de Supabase solo
+#                       funciona por IPv6.
+#   BACKUP_PASSPHRASE   frase larga para cifrar/descifrar los respaldos.
+# Si faltan, el flujo termina sin hacer nada (no falla).
+#
+# Restaurar: descargar el artifact, descifrar y usar restaurar.py:
+#   gpg --decrypt respaldo-encuentrau.dump.gpg > respaldo.dump
+#   python database/scripts/restaurar.py respaldo.dump --destino "<url>" --confirmar
+
+name: Respaldo diario de la base de datos
+
+on:
+  schedule:
+    - cron: '0 8 * * *'   # 08:00 UTC = 03:00 en Colombia
+  workflow_dispatch:       # también se puede lanzar a mano desde la pestaña Actions
+
+permissions:
+  contents: read
+
+jobs:
+  respaldo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Comprobar que los secretos existen
+        id: secretos
+        env:
+          URL_BD: ${{ secrets.SUPABASE_DB_URL }}
+          FRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$URL_BD" ] || [ -z "$FRASE" ]; then
+            echo "Faltan SUPABASE_DB_URL o BACKUP_PASSPHRASE: no se hace respaldo."
+            echo "configurado=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configurado=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.secretos.outputs.configurado == 'true'
+
+      - name: Instalar el cliente de PostgreSQL 18
+        if: steps.secretos.outputs.configurado == 'true'
+        run: |
+          # pg_dump debe ser de una versión igual o más nueva que el servidor
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+
+      - name: Respaldar
+        if: steps.secretos.outputs.configurado == 'true'
+        env:
+          DATABASE_URL_MIGRACIONES: ${{ secrets.SUPABASE_DB_URL }}
+        run: python3 database/scripts/respaldo.py --carpeta respaldo --conservar 1
+
+      - name: Cifrar el respaldo
+        if: steps.secretos.outputs.configurado == 'true'
+        env:
+          FRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          # La frase entra por stdin, no como argumento visible del proceso
+          printf '%s' "$FRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 \
+            --symmetric --cipher-algo AES256 -o respaldo-encuentrau.dump.gpg respaldo/encuentrau_*.dump
+          rm -f respaldo/encuentrau_*.dump
+
+      - name: Guardar el respaldo cifrado (30 días)
+        if: steps.secretos.outputs.configurado == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-encuentrau-${{ github.run_number }}
+          path: respaldo-encuentrau.dump.gpg
+          retention-days: 30
+          if-no-files-found: error

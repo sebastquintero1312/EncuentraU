@@ -1,47 +1,54 @@
-# AUTHORIZATION.md — Autorización en EncuentraU v1.0
+# AUTHORIZATION.md — Roles, permisos y protección contra reclamaciones falsas (v2.0)
 
-## Roles
+## 1. Principios
 
-| Rol | Permisos |
-|---|---|
-| `ciudadano` | CRUD de sus propios reportes, ver reportes públicos de otros, crear/cancelar sus propias solicitudes, ver solicitudes recibidas sobre sus propios reportes |
-| `administrador` | Todo lo anterior + ver y gestionar todos los reportes (cualquier estado), aprobar/rechazar cualquier solicitud, ver/gestionar usuarios (rol, activo) |
+- **Deny by default**: cada ruta declara exactamente qué rol puede usarla (`@estudiante_requerido`, `@encargado_requerido`, `@admin_requerido`, `@login_requerido` en `backend/app/middlewares/autorizacion.py`). Lo que no está permitido devuelve 401 (sin sesión) o 403 (otro rol).
+- **El rol se relee de la base de datos en cada petición**: nunca se toma del cliente. Si un administrador cambia el rol de alguien, aplica en su siguiente petición (`test_el_rol_se_relee_de_la_base_en_cada_peticion`).
+- **El frontend no es la autoridad**: `js/layout.js` solo muestra el menú del rol y redirige por comodidad. Aunque alguien modifique el JavaScript, el servidor responde 401/403.
+- **Defensa en profundidad**: además de Flask, la base de datos vuelve a exigir el rol en los procedimientos (`fn_exigir_encargado`) y en el trigger de nuevas reclamaciones (solo estudiantes).
+- **Separación de funciones**: quien opera (encargado) no controla, y quien controla (administrador) no opera.
 
-El rol se guarda en `usuarios.rol` y **siempre se relee de la base de datos** en cada petición (`middlewares/autorizacion.py`); nunca se confía en un valor enviado por el cliente (body, header, cookie propia).
+## 2. Matriz de permisos
 
-## Decoradores (`backend/app/middlewares/autorizacion.py`)
+| Acción | Estudiante | Encargado | Administrador |
+|---|:-:|:-:|:-:|
+| Reportar objeto perdido / encontrado | ✅ | ❌ | ❌ |
+| Ver y editar **sus propios** reportes (mientras estén en estado inicial) | ✅ | ❌ | ❌ |
+| Buscar objetos en la oficina (solo datos públicos) | ✅ | ❌ | ❌ |
+| Reclamar un objeto y generar su código de retiro | ✅ | ❌ | ❌ |
+| Ver **todos** los reportes con sus detalles privados | ❌ | ✅ | ✅ (solo lectura) |
+| Confirmar la recepción de un objeto en la oficina | ❌ | ✅ | ❌ |
+| Pre-aprobar o rechazar reclamaciones | ❌ | ✅ | ❌ |
+| Registrar la entrega presencial y cerrar reportes | ❌ | ✅ | ❌ |
+| Ver estadísticas de la oficina | ❌ | ✅ | ✅ |
+| Activar/desactivar cuentas, nombrar encargados, levantar revisiones | ❌ | ❌ | ✅ |
+| Gestionar categorías, ubicaciones y parámetros | ❌ | ❌ | ✅ |
+| Ver la auditoría y exportar datos | ❌ | ❌ | ✅ |
+| Crear administradores | ❌ | ❌ | ❌ (solo `flask crear-admin` en la terminal del servidor) |
 
-```python
-@login_requerido   # exige sesión válida; pasa el objeto Usuario como primer argumento
-@admin_requerido    # exige sesión válida Y rol == 'administrador'
-```
+Verificado ruta por ruta en `backend/tests/integration/test_roles.py` (las rutas de cada rol devuelven 403 para los otros dos y 401 sin sesión).
 
-Ambos: si no hay `usuario_id` en sesión → 401. Si el usuario fue borrado/desactivado desde que inició sesión → se limpia la sesión y 401. `admin_requerido` además exige `usuario.rol == 'administrador'` → si no, 403.
+Reglas del administrador (`usuarios_admin_service.py`): desde la web solo asigna `estudiante` o `encargado`; no se modifica a sí mismo ni a otro administrador; solo una cuenta con el correo verificado puede ser encargado.
 
-## Ownership (IDOR)
+## 3. Ownership (IDOR)
 
-Cada endpoint que modifica un recurso específico verifica que el usuario actual es su dueño (o admin) **antes** de aplicar el cambio:
+- Un estudiante solo edita, cancela o consulta coincidencias de **sus** reportes (`_reporte_propio` en `objetos_controller.py`), y solo cancela o genera código de **sus** reclamaciones. Cambiar el id en la URL devuelve 403 (`test_idor_*` en `tests/security/test_ofensivas.py`).
+- Los reportes de pérdida de otra persona y los objetos que aún no están en la oficina no son visibles (403).
+- Una notificación ajena responde 404.
+- Whitelist explícita contra *mass assignment*: campos como `estado`, `usuario_id`, `version`, `codigo_hash` o `rol` enviados por el cliente se ignoran (`test_mass_assignment_*`, `test_whitelist_al_actualizar_usuario`). Además, el usuario de base de datos de la app ni siquiera tiene permiso para cambiar esas columnas (ver `docs/DATABASE.md` §10).
 
-- `objetos_controller._es_dueno_o_admin(objeto, usuario)` — usado en `actualizar`, `cancelar`, `solicitudes_del_objeto`.
-- `solicitudes_controller.cancelar` — compara `solicitud.solicitante_id` contra el usuario actual.
-- `usuarios_admin_controller` — solo accesible con `admin_requerido`; además, un admin no puede modificar su propia fila (`usuarios_admin_service.actualizar_usuario`), para evitar que se quite su propio rol o se desactive por accidente y deje el sistema sin administradores.
+## 4. Cómo se evita que alguien reclame algo ajeno
 
-Un intento de acceso sin permiso retorna **403**, nunca 404 (el recurso sí existe, solo no está permitido) — excepto cuando el recurso realmente no existe, que sí retorna 404.
+Problema: "veo un objeto perdido en la lista, digo que es mío y me lo llevo". Medidas, en capas:
 
-## Mass assignment
+1. **Verificación a ciegas**: los objetos encontrados tienen una parte pública (nombre genérico, categoría, lugar, fecha) y una privada (marca, color, señas, contenido) que nunca se publica, ni en la búsqueda, ni en el detalle, ni en la propia reclamación del estudiante (`test_busqueda_no_muestra_la_descripcion_privada`, `test_el_reclamante_nunca_ve_la_descripcion_privada`). La búsqueda tampoco filtra por la descripción privada, para que nadie la adivine probando palabras (`test_busqueda_no_filtra_por_la_descripcion_privada`). Quien reclama describe el objeto sin haber visto esos detalles y el encargado compara las dos columnas.
+2. **Solo se publica lo que está en la oficina**: un objeto encontrado aparece en la búsqueda solo cuando un encargado confirma que lo recibió. Los reportes de pérdida no son públicos.
+3. **Evidencia que no se puede falsificar**: si el estudiante reportó la pérdida *antes* de que apareciera el objeto, el encargado lo ve marcado. La fecha la pone el sistema (`created_at`), no el usuario.
+4. **Aprobar no es entregar**: la pre-aprobación abre una ventana de 72 h. El estudiante genera desde su cuenta un **código de un solo uso** de 6 dígitos (en la base de datos solo queda su HMAC-SHA256 con la `SECRET_KEY`) y debe presentarse con su **carné** y una **prueba de propiedad** (desbloquearlo, factura…). Con 5 intentos fallidos el código se invalida; generar uno nuevo anula el anterior.
+5. **Límites contra el abuso**: una reclamación abierta por objeto; máximo 3 abiertas por estudiante; con 3 reclamaciones rechazadas la cuenta queda en revisión y no puede reclamar hasta que un administrador la revise. Lo aplica la base de datos (trigger), no solo Python.
+6. **Identidad verificada**: solo cuentas `@sanmateo.edu.co` con el correo confirmado (ver `docs/AUTHENTICATION.md`). Cada reclamación queda asociada a una persona identificable.
+7. **Trazabilidad**: todo queda en la auditoría inmutable; el administrador ve cuántas reclamaciones aprueba, rechaza y entrega cada encargado (`v_desempeno_encargados`) para detectar complicidad.
+8. **Avisos**: al entregar, el dueño recibe "si no fuiste tú, avisa" y quien lo encontró recibe "volvió a su dueño".
+9. **Disuasión**: la reclamación exige aceptar la declaración "reclamar un objeto ajeno puede constituir una falta disciplinaria".
 
-Cada endpoint de escritura acepta solo una **whitelist explícita** de campos, nunca el body completo:
-
-| Endpoint | Campos aceptados |
-|---|---|
-| `POST /api/auth/registro` | nombre, apellido, correo, contraseña — **nunca `rol`** |
-| `PUT /api/objetos/:id` | `CAMPOS_EDITABLES` en `objetos_service.py`: nombre, categoría, descripción, ubicación, fecha, imagen — **nunca `estado` ni `usuario_id`** |
-| `PUT /api/admin/usuarios/:id` | solo `rol` y/o `activo` |
-
-## El frontend nunca es la autoridad
-
-`frontend/public/js/sesion.js` (`protegerPagina`) redirige a un usuario sin sesión o sin rol admin fuera de una página protegida — esto es **solo experiencia de usuario**. La prueba real de que la autorización funciona es que el backend, probado directamente sin pasar por el frontend (toda la suite de `pytest`), rechaza exactamente las mismas peticiones.
-
-## Evidencia
-
-Ver `docs/REGLAS_100.md` categoría B (RU-016 a RU-030) para el detalle regla por regla con su evidencia citada, y `docs/evidencia/` para las ejecuciones reales (pytest + E2E con navegador).
+**Limitación honesta**: si el impostor conoce el objeto (por ejemplo, el celular de un compañero), puede describirlo bien. Por eso la última barrera es la prueba presencial. Ningún sistema elimina el fraude al 100%: el objetivo es que sea difícil, quede registrado y tenga consecuencias.

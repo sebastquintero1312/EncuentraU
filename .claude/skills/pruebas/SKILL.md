@@ -1,4 +1,4 @@
-﻿---
+---
 name: pruebas
 description: Guía para escribir, ejecutar y documentar pruebas en EncuentraU usando pytest.
 ---
@@ -92,7 +92,7 @@ def test_endpoint_protegido_sin_sesion(client):
     respuesta = client.get('/api/mis-reportes')
     assert respuesta.status_code == 401
 
-def test_endpoint_admin_con_ciudadano(client, sesion_ciudadano):
+def test_endpoint_admin_con_estudiante(client, estudiante):
     respuesta = client.get('/api/admin/usuarios')
     assert respuesta.status_code == 403
 ```
@@ -101,12 +101,12 @@ def test_endpoint_admin_con_ciudadano(client, sesion_ciudadano):
 Verifican que la autorización protege correctamente los recursos.
 
 ```python
-def test_no_puede_editar_reporte_ajeno(client, sesion_ciudadano_a, reporte_ciudadano_b):
-    respuesta = client.put(f'/api/objetos/{reporte_ciudadano_b.id}', json={...})
+def test_no_puede_editar_reporte_ajeno(client, estudiante_a, reporte_estudiante_b):
+    respuesta = client.put(f'/api/objetos/{reporte_estudiante_b.id}', json={...})
     assert respuesta.status_code == 403
 
-def test_si_puede_editar_reporte_propio(client, sesion_ciudadano_a, reporte_ciudadano_a):
-    respuesta = client.put(f'/api/objetos/{reporte_ciudadano_a.id}', json={...})
+def test_si_puede_editar_reporte_propio(client, estudiante_a, reporte_estudiante_a):
+    respuesta = client.put(f'/api/objetos/{reporte_estudiante_a.id}', json={...})
     assert respuesta.status_code == 200
 ```
 
@@ -173,7 +173,7 @@ tests/
 
 ### Autorización
 - [ ] Endpoint protegido rechaza sin sesión (401)
-- [ ] Endpoint de admin rechaza ciudadano (403)
+- [ ] Endpoint de admin rechaza estudiante y encargado (403)
 - [ ] Modificar reporte ajeno falla (403)
 - [ ] Modificar reporte propio funciona (200)
 

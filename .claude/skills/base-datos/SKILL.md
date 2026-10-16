@@ -1,4 +1,4 @@
-﻿---
+---
 name: base-datos
 description: Guía para el diseño, implementación y mantenimiento de la base de datos de EncuentraU usando SQLAlchemy.
 ---
@@ -17,13 +17,9 @@ Guiar el diseño e implementación de la base de datos de EncuentraU, incluyendo
 - Al diseñar consultas o filtros.
 - Al implementar migraciones de esquema.
 
-## 3. ESTADO ACTUAL (v0.25)
+## 3. ESTADO ACTUAL (v2.0)
 
-**NO hay base de datos real.** Los datos viven en memoria (listas Python).
-- `models/usuario.py` — lista en memoria
-- `models/token_recuperacion.py` — lista en memoria
-- Se pierden al reiniciar el servidor.
-- **NO modificar este estado durante la Fase 0.**
+PostgreSQL en todos los entornos. Esquema en `backend/migrations/sql/` (tablas, triggers, procedimientos, vistas, datos iniciales, permisos), aplicado por la migración `0001_esquema_v2`. Dos usuarios: `encuentrau` (dueño, migraciones) y `encuentrau_app` (aplicación, permisos mínimos). Documentación completa: `docs/DATABASE.md`.
 
 ## 4. Qué debe cubrir (para v1.0)
 
@@ -53,7 +49,7 @@ Guiar el diseño e implementación de la base de datos de EncuentraU, incluyendo
 - [ ] Índice único en correo de usuario
 
 ### Restricciones
-- [ ] Restricciones CHECK donde aplica (ej: rol en ('ciudadano', 'administrador'))
+- [ ] Restricciones CHECK donde aplica (o FK a una tabla de catálogo, como `usuarios.rol → roles.codigo`)
 - [ ] Restricciones de integridad referencial
 
 ### Migraciones
@@ -66,38 +62,18 @@ Guiar el diseño e implementación de la base de datos de EncuentraU, incluyendo
 - [ ] Rollback en caso de error
 - [ ] No dejar sesiones abiertas
 
-## 5. Modelos necesarios en v1.0
+## 5. Tablas (v2.0)
 
-### Usuario
-```
-id, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido,
-correo (único), password_hash, rol, activo, created_at
-```
-
-### TokenRecuperacion
-```
-id, token (único, indexado), usuario_id (FK), expira_en, usado, created_at
-```
-
-### Objeto (reporte)
-```
-id, tipo (perdido/encontrado), nombre, categoria, descripcion,
-ubicacion, fecha_evento, imagen_url, estado, usuario_id (FK), created_at, updated_at
-```
-
-### Solicitud
-```
-id, objeto_id (FK), solicitante_id (FK), mensaje, estado, created_at
-```
+`roles`, `estados_objeto`, `transiciones_objeto`, `estados_solicitud`, `parametros`, `categorias`, `ubicaciones`, `usuarios`, `tokens_usuario`, `objetos`, `solicitudes`, `entregas`, `notificaciones`, `auditoria`. Ver `docs/DATABASE.md` §4 y el diagrama en `docs/DIAGRAMAS.md`.
 
 ## 6. Reglas obligatorias
 
-1. Nunca poner consultas SQL directas fuera de los modelos.
+1. Nunca poner consultas SQL directas fuera de los modelos (en v2.0: solo `models/procedimientos.py` y `models/reportes.py`, siempre parametrizadas).
 2. Siempre usar parámetros de SQLAlchemy (previene SQL Injection automáticamente).
 3. Nunca modificar el esquema en producción sin migración.
 4. Siempre hacer rollback si una transacción falla.
 5. No dejar sesiones de SQLAlchemy sin cerrar.
-6. No modificar la base de datos actual durante la Fase 0.
+6. Todo cambio de esquema se hace con una migración nueva; las reglas críticas también van en la base de datos (triggers/procedimientos/restricciones).
 
 ## 7. Procedimiento de migración (memoria → SQLAlchemy)
 

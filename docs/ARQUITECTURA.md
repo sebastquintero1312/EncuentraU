@@ -1,121 +1,116 @@
-# ARQUITECTURA.md — Arquitectura de EncuentraU v1.0
+# ARQUITECTURA.md — Arquitectura de EncuentraU v2.0
 
-> Este es el documento de arquitectura vigente. `ARCHITECTURE.md` (en la raíz del proyecto) describía un stack Node.js/Express/MySQL que fue reemplazado por completo por Flask desde v0.25 y quedó desactualizado (hallazgo de la auditoría, `docs/ESTADO_V025.md` sección 5); ahora solo redirige aquí.
+> Documento de arquitectura vigente. `ARCHITECTURE.md` (en la raíz) describe un stack Node.js antiguo y se conserva solo como historia.
 
 ## 1. Visión general
 
-EncuentraU es una aplicación monolítica de dos capas: un frontend estático (HTML/CSS/JS vanilla) y un backend Flask con base de datos relacional, servidos **desde el mismo origen** (mismo dominio, mismo puerto) para evitar CORS innecesario y para que exista una sola URL pública.
+Monolito de dos capas: frontend estático (HTML/CSS/JS vanilla) y backend Flask, servidos **desde el mismo origen**, con PostgreSQL como base de datos. Buena parte de las reglas críticas (estados, límites, entregas, auditoría, permisos) vive **también** dentro de PostgreSQL, como defensa en profundidad.
 
 ```mermaid
 flowchart TB
-    Usuario["Persona con navegador"]
-    Flask["Flask (Python)\napp/__init__.py"]
-    Estatico["frontend/public/\n(HTML, CSS, JS)"]
-    API["Blueprints /api/*\nrutas → controladores → servicios"]
+    Usuario["Navegador<br/>(estudiante, encargado, administrador)"]
+    Flask["Flask (Python)<br/>app/__init__.py"]
+    Estatico["frontend/public/<br/>HTML, CSS, JS, fuentes e íconos propios"]
+    API["Blueprints /api/*<br/>rutas → controladores → servicios"]
     ORM["SQLAlchemy (ORM)"]
-    BD[("Base de datos\nSQLite (dev) / PostgreSQL (prod)")]
+    Proc["Procedimientos almacenados<br/>models/procedimientos.py"]
+    BD[("PostgreSQL<br/>tablas · triggers · procedimientos · vistas · RLS")]
+    Correo["Brevo (API HTTPS)<br/>correos"]
 
-    Usuario -- "HTTPS" --> Flask
-    Flask -- "sirve archivos estáticos" --> Estatico
-    Flask -- "enruta /api/*" --> API
-    API --> ORM
-    ORM --> BD
+    Usuario -- "HTTPS (cookie de sesión + CSRF)" --> Flask
+    Flask -- "archivos estáticos" --> Estatico
+    Flask -- "/api/*" --> API
+    API --> ORM --> BD
+    API --> Proc --> BD
+    API -- "después del COMMIT" --> Correo
 ```
 
 ## 2. Capas del backend (`backend/app/`)
 
 ```
-routes/        → solo URL, método HTTP, decoradores de auth/rate-limit. Sin lógica.
-controllers/   → lee la petición (request), valida forma básica, llama al service, arma la respuesta JSON.
-services/      → TODA la lógica de negocio y validación real. No conoce Flask (sin `request`, sin `jsonify`).
-models/        → clases SQLAlchemy (datos) + funciones de acceso a datos simples (crear/buscar).
-middlewares/   → autorizacion.py (decoradores login/admin), manejo_errores.py (handlers globales).
-config/        → config.py, toda la configuración sale de variables de entorno.
-extensions.py  → instancias compartidas (db, migrate, limiter, csrf) sin la app todavía, para evitar imports circulares.
+routes/        URL, método HTTP y protección: @estudiante_requerido, @encargado_requerido,
+               @admin_requerido, @login_requerido y límites de peticiones. Sin lógica.
+controllers/   leen la petición, verifican ownership, llaman al servicio y arman el JSON.
+services/      toda la lógica de negocio y la validación definitiva. No conocen Flask.
+models/        clases SQLAlchemy que reflejan el esquema SQL + procedimientos.py y
+               reportes.py (únicos lugares con SQL escrito a mano, siempre parametrizado).
+middlewares/   autorizacion.py (decoradores por rol), manejo_errores.py (traduce los
+               errores de PostgreSQL: P0001 → 409 con el mensaje de la regla, etc.).
+config/        config.py: todo sale de variables de entorno; valida la configuración al arrancar.
+auditoria_contexto.py   le dice a PostgreSQL quién hace cada cambio (set_config por transacción).
+seguridad.py   tokens, hashes y códigos de retiro (módulo secrets, SHA-256, HMAC).
+comandos.py    flask crear-admin / verificar-correo / vencer-reservas.
 ```
 
-Ejemplo de flujo de una petición (`POST /api/objetos`):
+| Módulo | Servicios principales |
+|---|---|
+| Cuentas | `cuentas_service` (registro, verificación, recuperación), `auth_service` (contraseñas, dominio) |
+| Reportes | `objetos_service`, `coincidencias_service` |
+| Reclamaciones del estudiante | `solicitudes_service` |
+| Oficina (encargado) | `oficina_service` → procedimientos almacenados |
+| Administración | `usuarios_admin_service`, `catalogos_service`, `auditoria_service` (incluye CSV) |
+| Avisos | `notificaciones_service`, `correo_service` |
+
+**Patrón de una operación del encargado** (ejemplo: entrega):
 
 ```mermaid
 sequenceDiagram
-    participant F as Frontend (fetch)
-    participant R as routes/objetos_routes.py
-    participant M as middlewares/autorizacion.py
-    participant C as controllers/objetos_controller.py
-    participant S as services/objetos_service.py
-    participant D as models/objeto.py (SQLAlchemy)
-    participant BD as Base de datos
-
-    F->>R: POST /api/objetos + cookie sesión + X-CSRFToken
-    R->>M: @login_requerido
-    M->>D: buscar_por_id(usuario_id de la sesión)
-    D->>BD: SELECT usuarios WHERE id=?
-    BD-->>D: usuario
-    M-->>R: usuario autenticado (o 401)
-    R->>C: crear(usuario_actual)
-    C->>S: crear_objeto(usuario.id, datos)
-    S->>S: validar_datos_objeto()
-    S->>D: db.session.add(objeto); commit()
-    D->>BD: INSERT INTO objetos
-    S-->>C: objeto creado
-    C-->>F: 201 {mensaje, objeto}
+    participant F as Frontend
+    participant R as oficina_routes
+    participant S as oficina_service
+    participant P as models/procedimientos
+    participant BD as PostgreSQL
+    participant C as correo_service
+    F->>R: POST /api/encargado/objetos/7/entrega (+ CSRF)
+    R->>R: @encargado_requerido (relee el rol de la BD)
+    R->>S: entregar(encargado, 7, datos)
+    S->>S: valida formato del código, carné, prueba
+    S->>P: registrar_entrega(... HMAC del código ...)
+    P->>BD: CALL sp_registrar_entrega(...)
+    BD->>BD: FOR UPDATE del objeto, valida, INSERT acta, UPDATEs (triggers de auditoría)
+    BD-->>S: 'entregado'
+    S->>BD: INSERT notificaciones (misma transacción) + COMMIT
+    S->>C: enviar correos (solo después del COMMIT)
+    S-->>F: 200 {mensaje, entrega}
 ```
 
 ## 3. Frontend (`frontend/public/`)
 
-Sin build step, sin framework: HTML + CSS + JS vanilla, servidos como archivos estáticos por el propio Flask (`static_folder=frontend/public, static_url_path=''`). Cada página de negocio tiene su propio archivo `js/pagina-*.js` (nunca `<script>` inline, para poder aplicar una Content-Security-Policy estricta — ver `SECURITY.md`).
+Sin build step ni framework. Identidad visual inspirada en sanmateo.edu.co (Poppins, naranja institucional, azul marino), con fuentes e íconos servidos desde el propio servidor para cumplir la CSP (`script-src 'self'`, `style-src 'self'`, sin `unsafe-inline`). Detalle en `docs/FRONTEND.md`.
 
 ```
-js/api.js       → fetch con manejo de CSRF y credenciales (cookies). API_BASE='/api' (mismo origen).
-js/sesion.js     → obtenerSesion(), protegerPagina({admin}), logout real.
-js/main.js       → helpers compartidos: resaltar nav activo, crearElemento/crearBadge (DOM seguro, sin innerHTML con datos de usuario).
-js/validaciones.js, js/contrasena-fortaleza.js → validación visual (UX), nunca la autoridad.
-js/pagina-*.js   → un archivo por página con lógica específica (login, registro, reportar, buscar, detalle, mis-reportes, paneles admin...).
+js/layout.js   arma encabezado, menú por rol y pie en todas las páginas; expone la promesa sesionLista
+js/api.js      fetch con credenciales y CSRF
+js/main.js     el() para construir el DOM de forma segura (nunca innerHTML), fechas, insignias, tarjetas
+js/pagina-*.js un archivo por página
 ```
 
 ## 4. Base de datos
 
-Ver `docs/DATABASE.md` para el esquema completo. Resumen: 4 tablas (`usuarios`, `tokens_recuperacion`, `objetos`, `solicitudes`), SQLAlchemy como ORM, Flask-Migrate/Alembic para migraciones versionadas, SQLite en desarrollo y PostgreSQL en producción (vía `DATABASE_URL`).
+PostgreSQL en desarrollo, pruebas y producción. 14 tablas normalizadas a 3FN, triggers, procedimientos almacenados, vistas, índices especializados, permisos mínimos y RLS. Ver `docs/DATABASE.md` y el diagrama entidad-relación en `docs/DIAGRAMAS.md`.
 
-## 5. Por qué mismo origen (no microservicios, no subdominios separados)
-
-La misión de v1.0 pide explícitamente **una sola URL pública**. Servir el frontend estático desde el mismo proceso Flask que la API:
-- Elimina la necesidad de CORS en producción (`Access-Control-Allow-Origin` solo se configura para el caso de desarrollo con dos servidores en paralelo, puerto 5000 y 5500).
-- Simplifica el despliegue: un solo servicio, un solo dominio, una sola configuración de HTTPS.
-- Es coherente con "simplicidad académica, no perfecta en abstracto" (CLAUDE.md): un monolito bien organizado en capas es más fácil de entender, desplegar y depurar para un estudiante que una arquitectura de microservicios.
-
-## 6. Diagrama de despliegue objetivo
+## 5. Despliegue objetivo
 
 ```mermaid
 flowchart LR
-    subgraph Internet
-        Nav["Navegador del usuario"]
-    end
-    subgraph Proveedor["Proveedor de hosting (HTTPS)"]
-        Gunicorn["Gunicorn\n(WSGI, Linux)"]
-        App["App Flask\n(frontend estático + API)"]
-        PG[("PostgreSQL\nmanejado por el proveedor")]
-    end
-    Nav -- HTTPS --> Gunicorn
-    Gunicorn --> App
-    App -- DATABASE_URL --> PG
+    Nav["Navegador"] -- HTTPS --> Render["Render (gratis)<br/>Gunicorn + Flask"]
+    Render -- "DATABASE_URL (pooler, IPv4)" --> Supa[("Supabase<br/>PostgreSQL")]
+    Render -- "API HTTPS" --> Brevo["Brevo<br/>correos"]
+    GH["GitHub Actions"] -- "pytest en cada push" --> GH
+    GH -- "respaldo diario cifrado" --> Supa
 ```
 
-Ver `docs/DEPLOYMENT.md` para el estado real de este despliegue (qué está preparado y qué falta por autorización externa).
+Estado real: **pendiente** (la base de datos gratuita de Render venció; el cambio a Supabase todavía no se ha hecho). Ver `docs/DEPLOYMENT.md`.
 
-## 7. Decisiones que se mantienen de v0.25
+## 6. Decisiones
 
-- Blueprint pattern para las rutas de Flask.
-- Patrón de extensiones compartidas sin la app (`extensions.py`) para evitar imports circulares.
-- Estilo de mensajes de error en español, formato `{mensaje, errores?}`.
-- Identidad visual del frontend (paleta de colores, logo, estructura de páginas) — no se rediseñó, solo se conectó a datos reales.
+**Se mantienen de v1.0**: mismo origen para frontend y API; Blueprints; `extensions.py` contra imports circulares; mensajes de error en español con formato `{mensaje, errores?}`; Argon2id; CSRF; cabeceras de seguridad.
 
-Ver también `docs/DIAGRAMAS.md`: entidad-relación, casos de uso, clases y actividad del proceso de reclamación.
-
-## 8. Decisiones nuevas en v1.0
-
-- SQLAlchemy + Flask-Migrate reemplazan el almacenamiento en listas de Python.
-- Argon2id reemplaza scrypt (Werkzeug) para el hashing de contraseñas.
-- Cuatro nuevos módulos de negocio completos: objetos, solicitudes, coincidencias, administración de usuarios/reportes/solicitudes.
-- Cabeceras de seguridad (CSP y otras) — obligó a mover toda la lógica JS inline a archivos externos.
-- Frontend y backend servidos desde el mismo origen (antes: dos servidores de desarrollo separados).
+**Nuevas en v2.0**:
+- PostgreSQL en todos los entornos (SQLite no tiene procedimientos, permisos ni RLS).
+- Esquema escrito en SQL legible (`backend/migrations/sql/`) en vez de generado desde las clases: es más fácil de explicar y de reutilizar en el editor SQL de Supabase.
+- Reglas críticas duplicadas a propósito en la base de datos (triggers, procedimientos, índices únicos parciales): aunque Python tuviera un bug, los datos no quedan inconsistentes.
+- Tres roles con funciones separadas en lugar de "ciudadano/administrador".
+- Dos usuarios de base de datos (dueño y aplicación) en lugar de uno.
+- Correos reales (verificación, recuperación, avisos) con un patrón de dos pasos: la notificación se guarda en la transacción del cambio y el correo se envía después del `COMMIT`.
+- Rediseño completo del frontend con el estilo del sitio de la universidad.

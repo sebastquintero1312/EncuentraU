@@ -1,4 +1,4 @@
-﻿---
+---
 name: autenticacion
 description: Guía para implementar y revisar el sistema de autenticación de EncuentraU: registro, login, logout, sesiones y recuperación.
 ---
@@ -26,7 +26,8 @@ Guiar la implementación y revisión del sistema de autenticación de EncuentraU
 - [ ] Política de contraseñas aplicada en el backend
 - [ ] Contraseña hasheada antes de guardar (NUNCA texto plano)
 - [ ] Mensaje de error no revela si el correo ya existe (en algunos contextos)
-- [ ] Rol inicial siempre 'ciudadano' (nunca confiar en el cliente para el rol)
+- [ ] Rol inicial siempre 'estudiante' (nunca confiar en el cliente para el rol)
+- [ ] Solo correos del dominio institucional, y la cuenta no se usa hasta verificar el correo
 
 ### Login
 - [ ] Verificación de correo y contraseña

@@ -1,52 +1,51 @@
-# FRONTEND.md — Frontend de EncuentraU v1.0
+# FRONTEND.md — Frontend de EncuentraU v2.0
 
-HTML + CSS + JavaScript vanilla, sin framework ni build step. Servido por el propio backend Flask como estático (mismo origen que la API).
+HTML + CSS + JavaScript vanilla, sin framework ni build step, servido por Flask desde el mismo origen que la API.
 
-## Páginas (`frontend/public/*.html`)
+## Identidad visual
 
-| Página | Backend real | Auth requerida |
-|---|---|---|
-| `index.html` | — (estática) | No |
-| `login.html`, `registro.html`, `recuperar-contrasena.html`, `restablecer-contrasena.html` | `/api/auth/*` | No |
-| `panel-ciudadano.html` | `/api/auth/sesion` | Sí |
-| `reportar-perdido.html`, `reportar-encontrado.html` | `POST /api/objetos` | Sí |
-| `mis-reportes.html` | `/api/mis-reportes`, `DELETE /api/objetos/:id` | Sí |
-| `buscar-objetos.html` | `GET /api/objetos` | No |
-| `detalle-objeto.html` | `GET /api/objetos/:id`, `GET /api/objetos/:id/solicitudes` | No (Sí para ver solicitudes propias) |
-| `solicitud-recuperacion.html` | `POST /api/solicitudes` | Sí |
-| `panel-admin.html` | agregados de `/api/objetos`, `/api/admin/*` | Sí + admin |
-| `gestion-reportes.html` | `/api/admin/objetos`, `PUT /api/admin/objetos/:id/estado` | Sí + admin |
-| `gestion-solicitudes.html` (nueva en v1.0) | `/api/admin/solicitudes`, `PUT /api/admin/solicitudes/:id` | Sí + admin |
-| `gestion-usuarios.html` | `/api/admin/usuarios`, `PUT /api/admin/usuarios/:id` | Sí + admin |
+Rediseño completo inspirado en el sitio de la Fundación Universitaria San Mateo (sanmateo.edu.co): fuente **Poppins**, naranja institucional `#F47920`, azul marino `#0F172A`, barra superior oscura ("Soy estudiante / Soy encargado / Soy administrador"), menú blanco fijo con el logo, encabezados oscuros con una palabra en naranja, tarjeta de filtros "flotante" con filtros tipo píldora, tarjetas muy redondeadas y pie de página oscuro con borde naranja. Capturas reales: `docs/evidencia/capturas_v2/`.
 
-Todas las páginas protegidas llaman `protegerPagina()` / `protegerPagina({admin:true})` al cargar (`js/sesion.js`), que redirige si no hay sesión válida o rol suficiente. **Esto es solo experiencia de usuario** — el backend es quien realmente decide qué se permite (ver `docs/AUTHORIZATION.md`).
+- **Accesibilidad (WCAG AA)**: el naranja con texto blanco no alcanza el contraste mínimo, así que los botones naranjas llevan texto azul marino (6.9:1) y el texto naranja sobre blanco usa un tono más oscuro (`--naranja-texto`). Foco visible, etiquetas en todos los campos, `aria-*` en menús y filtros.
+- **Responsive**: menú desplegable en celular (verificado en `17_inicio_movil.png`).
+- **Sin recursos externos**: Poppins (`fuentes/poppins/`, licencia SIL OFL) y Font Awesome Free 6.5.2 (`vendor/fontawesome/`, verificado contra el hash SRI de cdnjs) se sirven desde el propio servidor. Por eso la CSP puede ser estricta: `default-src 'self'`, `script-src 'self'`, `style-src 'self'` (sin `unsafe-inline`).
+- El pie aclara: "Proyecto académico… No es un canal oficial de la universidad".
+
+## Páginas (25)
+
+| Acceso | Páginas |
+|---|---|
+| Pública | `index.html`, `verificar-correo.html`, `restablecer-contrasena.html` |
+| Solo sin sesión | `login.html`, `registro.html`, `recuperar-contrasena.html` |
+| Estudiante | `panel-estudiante.html`, `buscar-objetos.html`, `detalle-objeto.html`, `reclamar-objeto.html`, `reportar-perdido.html`, `reportar-encontrado.html` (también editan con `?editar=id`), `mis-reportes.html`, `mis-reclamaciones.html` |
+| Encargado | `panel-encargado.html`, `encargado-objetos.html`, `encargado-reclamaciones.html`, `encargado-reclamacion.html` (comparación a ciegas) |
+| Encargado o admin | `oficina-objeto.html` (el encargado opera; el admin solo lee) |
+| Administrador | `panel-admin.html`, `admin-usuarios.html`, `admin-catalogos.html`, `admin-objetos.html`, `admin-auditoria.html` |
+| Cualquier sesión | `notificaciones.html` |
+
+Cada página declara `<body data-acceso="…">`. `js/layout.js` consulta la sesión una sola vez, redirige si el rol no corresponde, arma el encabezado y el pie **del rol** y entrega el usuario a la página con la promesa `sesionLista`. Mientras tanto, el contenido de las páginas protegidas está oculto (sin parpadeo). **Es solo experiencia de usuario**: el backend vuelve a verificar todo (ver `docs/AUTHORIZATION.md`).
 
 ## JavaScript (`frontend/public/js/`)
 
 ```
-api.js              → fetch con cookies + CSRF. peticionGet(), peticionProtegida(ruta, metodo, cuerpo).
-sesion.js            → obtenerSesion(), protegerPagina(), logout real (conectarCerrarSesion).
-main.js              → resaltado de nav activo, claseBadgeEstado(), textoEstado(),
-                        crearElemento()/crearBadge() — construcción de DOM SIN innerHTML.
-validaciones.js       → helpers de validación de formularios (solo UX).
-contrasena-fortaleza.js → medidor visual de fortaleza de contraseña (solo UX).
-pagina-*.js          → un archivo por página con su lógica específica (nunca inline).
+api.js              fetch con cookies + CSRF en memoria (nunca localStorage); errores de red manejados
+main.js             el(): construye el DOM con createElement/textContent; fechas en hora local;
+                    insignias de estado; tarjetaObjeto(); paginación; esPaginaInterna()
+sesion.js           obtenerSesion(), panelDeRol(), cerrarSesion()
+layout.js           encabezado, menú por rol, campana de notificaciones, pie, control de acceso de la interfaz
+validaciones.js     ayudas de validación de formularios (solo UX)
+contrasena-fortaleza.js  medidor de fortaleza (solo UX)
+pagina-*.js         uno por página (nunca <script> inline: la CSP lo bloquearía)
 ```
 
-### Por qué no hay `<script>` inline
+## Seguridad en el navegador
 
-El backend envía `Content-Security-Policy: script-src 'self'` (ver `docs/SECURITY.md`), que bloquea cualquier JavaScript embebido directamente en el HTML. Por eso cada página tiene su lógica en un archivo `js/pagina-*.js` separado, cargado con `<script src="...">`. Esto se verificó funcionando de extremo a extremo con un navegador real (Playwright) — si algún script inline hubiera quedado, esa página habría fallado silenciosamente.
-
-### Por qué no se usa `innerHTML` con datos de la API
-
-Los datos que vienen de la API (nombre de un reporte, mensaje de una solicitud, nombre de un usuario) son **texto ingresado por otros usuarios** y pueden contener HTML/JavaScript malicioso (confirmado en las pruebas de XSS, `docs/evidencia/`). El backend los guarda tal cual (no es su responsabilidad escapar HTML, solo persistir el dato); la responsabilidad de no ejecutarlos es del frontend al mostrarlos. Por eso `main.js` expone `crearElemento(etiqueta, texto, clase)` y `crearBadge(texto, clase)`, que usan siempre `textContent`, nunca `innerHTML`, y todas las páginas reescritas en v1.0 los usan en vez de plantillas de texto interpoladas.
+- **Nunca `innerHTML`** (ni `outerHTML`, `insertAdjacentHTML`, `document.write` o `eval`): todo texto que viene de la API se inserta como nodo de texto. Comprobado con un objeto llamado `<img src=x onerror=alert(1)>`, que se muestra literal y no ejecuta nada (verificación E2E).
+- **Open redirect**: `?siguiente=` del login solo acepta páginas internas (`esPaginaInterna`); los enlaces de las notificaciones se validan igual (y la base de datos los restringe con un CHECK).
+- **Tokens en la URL** (verificación y recuperación): se borran de la barra de direcciones al leerlos y esas páginas no envían `Referer`.
+- **Código de retiro**: se muestra una sola vez en una ventana con aviso de no compartirlo; al cerrarla se borra del DOM.
+- La CSP es tan estricta que bloqueó la función `wait_for_function` de Playwright (evalúa texto como JavaScript): prueba práctica de que la política impide `eval`.
 
 ## Comunicación con el backend
 
-- `API_BASE = '/api'` (ruta relativa: mismo origen, sin CORS en producción).
-- Cookies de sesión: `credentials: 'include'` en cada `fetch`.
-- CSRF: `peticionProtegida()` obtiene el token una vez (`GET /api/auth/csrf-token`) y lo cachea en una variable de JS en memoria (nunca en `localStorage`/`sessionStorage`); lo renueva automáticamente si una respuesta de login/logout trae uno nuevo (ver `docs/AUTHENTICATION.md`).
-
-## Identidad visual
-
-Se conserva íntegra de v0.25: paleta de colores institucional, logo, estructura de páginas (`frontend/public/css/styles.css`, sin cambios). v1.0 solo reemplaza la fuente de los datos (de simulados a reales), no el diseño.
+`API_BASE = '/api'` (mismo origen). `credentials: 'include'` en cada `fetch`. El token CSRF se pide una vez y se renueva automáticamente cuando login/logout devuelven uno nuevo. Los filtros de la búsqueda se reflejan en la URL (`?q=…&categoria_id=…`) como en el buscador de programas de la universidad.

@@ -1,0 +1,49 @@
+Evidencia: verificacion de extremo a extremo con navegador real (Microsoft Edge + Playwright)
+Fecha: 2026-10-16 16:08 (hora de Colombia)
+Servidor: python app.py contra PostgreSQL 18.6 local
+Comando: venv\Scripts\python.exe tests\e2e\verificacion_navegador.py
+
+[OK] Inicio carga con encabezado y pie generados por layout.js
+[OK] Inicio muestra las cifras públicas
+[OK] Una página protegida sin sesión redirige al login
+[OK] El registro rechaza correos que no son institucionales
+[OK] Sin verificar el correo no se puede entrar (y se ofrece reenviar)
+[OK] El enlace de verificación llegó por correo
+[OK] La verificación quita el token de la barra de direcciones
+[OK] El panel del estudiante saluda por su nombre
+[OK] El parámetro "siguiente" no redirige a sitios externos (open redirect)
+[OK] flask crear-admin promueve a un usuario verificado
+[OK] El administrador nombra encargada desde la web
+[OK] El dueño ve su descripción privada
+[OK] El objeto encontrado queda pendiente de entrega
+[OK] Lo que aún no está en la oficina no aparece en la búsqueda
+[OK] El encargado ve la descripción privada
+[OK] La recepción deja el objeto en la oficina
+[OK] Beto recibe el aviso de posible coincidencia
+[OK] El objeto aparece en la búsqueda al llegar a la oficina
+[OK] La búsqueda NO muestra la descripción privada
+[OK] El detalle público tampoco muestra la descripción privada
+[OK] Sin aceptar la declaración no se envía
+[OK] La reclamación queda pendiente
+[OK] La comparación muestra lo que dijo el estudiante
+[OK] La comparación muestra los detalles privados
+[OK] Se marca la evidencia del reporte de pérdida previo
+[OK] El código de retiro tiene 6 dígitos
+[OK] Un código incorrecto se rechaza y descuenta intentos
+[OK] La entrega queda registrada con su acta
+[OK] Beto ve su reclamación como entregada
+[OK] Su reporte de pérdida quedó como recuperado
+[OK] El panel muestra el trabajo de la encargada
+[OK] La auditoría registró la entrega y quién la hizo
+[OK] La auditoría del objeto muestra cada paso con su autor
+[OK] Un estudiante que abre el panel de admin vuelve a su panel
+[OK] Una encargada no entra a las pantallas de estudiante
+[OK] Un nombre con HTML se muestra como texto
+[OK] Y no ejecuta JavaScript
+[OK] En el celular, el botón abre el menú
+[OK] Sin errores de JavaScript ni de CSP en el navegador (0)
+    (respuestas 4xx esperadas y manejadas por la interfaz: 2)
+     - ana (encuentra): Failed to load resource: the server responded with a status of 403 (FORBIDDEN)
+     - elena (encargada): Failed to load resource: the server responded with a status of 400 (BAD REQUEST)
+
+TODO CORRECTO · capturas en C:\dev\EncuentraU\docs\evidencia\capturas_v2

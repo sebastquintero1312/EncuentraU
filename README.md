@@ -1,64 +1,83 @@
 # EncuentraU
 
-Plataforma universitaria para gestionar objetos perdidos y encontrados.
+Plataforma de la comunidad San Mateo para reportar y recuperar objetos perdidos, con entrega verificada en la oficina de objetos perdidos.
 
-Versión actual: **v1.0** — Backend Flask + SQLAlchemy con base de datos real, frontend conectado por completo (sin datos simulados), autenticación y autorización reales, seguridad verificada con pruebas automatizadas y de extremo a extremo.
+**Versión actual: v2.0**: Flask + PostgreSQL (triggers, procedimientos almacenados, auditoría), tres roles (estudiante, encargado, administrador), reclamación con verificación a ciegas y código de retiro, verificación del correo institucional y frontend con el estilo del sitio de la universidad. **Todavía no está desplegada** (ver `docs/DEPLOYMENT.md`).
 
-Documentación completa en `docs/`: `ARQUITECTURA.md`, `API.md`, `BACKEND.md`, `FRONTEND.md`, `DATABASE.md`, `AUTHENTICATION.md`, `AUTHORIZATION.md`, `TESTING.md`, `DEPLOYMENT.md`, `MATRIZ_SEGURIDAD.md`, `REGLAS_100.md`, `VERSION_1.0.md` (informe final). `SECURITY.md` y `CHANGELOG.md` están en la raíz.
+Documentación en `docs/`: `VERSION_2.0.md` (informe), `ARQUITECTURA.md`, `DATABASE.md`, `API.md`, `AUTHENTICATION.md`, `AUTHORIZATION.md`, `BACKEND.md`, `FRONTEND.md`, `TESTING.md`, `DEPLOYMENT.md`, `MATRIZ_SEGURIDAD.md`, `DIAGRAMAS.md`, `REGLAS_100.md`. En la raíz: `SECURITY.md` y `CHANGELOG.md`.
 
 ## Requisitos
 
-- Python 3.10+ (probado con 3.12).
+- Python 3.11 (`winget install --id Python.Python.3.11 --source winget`)
+- PostgreSQL 15 o superior (probado con 18.6)
 
-## Cómo ejecutar en desarrollo
+## Cómo ejecutar en desarrollo (Windows, PowerShell)
 
-```bash
-cd backend
-python -m venv venv
-venv\Scripts\activate              # Windows; en Linux/Mac: source venv/bin/activate
-pip install -r requirements.txt
-copy .env.example .env             # Windows; en Linux/Mac: cp .env.example .env
-# Edita .env y define un SECRET_KEY propio, por ejemplo:
-#   python -c "import secrets; print(secrets.token_hex(32))"
+### 1. Entorno de Python (una sola vez)
 
-set FLASK_APP=app.py               # Windows; en Linux/Mac: export FLASK_APP=app.py
-flask db upgrade                   # crea backend/instance/encuentrau_dev.db con el esquema completo
-
-python app.py
+```powershell
+cd C:\dev\EncuentraU\backend
+py -3.11 -m venv venv
+.\venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+copy .env.example .env
 ```
 
-Abre **http://127.0.0.1:5000** — el mismo servidor sirve el frontend y la API (mismo origen, sin necesidad de CORS ni de un segundo servidor).
+En `backend\.env`:
+- Pon un `SECRET_KEY` propio. Para generarlo: `.\venv\Scripts\python.exe -c "import secrets; print(secrets.token_hex(32))"`.
+- Inventa dos contraseñas: una para el usuario dueño (`CLAVE_DUENO`) y otra para el de la aplicación (`CLAVE_APP`). Ponlas en las cuatro URLs de base de datos.
 
-## Crear el primer usuario administrador
+### 2. Base de datos (una sola vez)
 
-```bash
-# 1. Regístrate normalmente desde la web (http://127.0.0.1:5000/registro.html)
-# 2. Desde la terminal del servidor (backend/), promuévelo:
-flask crear-admin tu-correo@sanmateo.edu.co
+Crea los usuarios `encuentrau` (dueño) y `encuentrau_app` (permisos mínimos) y las bases `encuentrau_dev` y `encuentrau_test`. Pide la contraseña de `postgres`:
+
+```powershell
+cd C:\dev\EncuentraU
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -h localhost -v clave=CLAVE_DUENO -v clave_app=CLAVE_APP -f database\scripts\crear_bd_local.sql
 ```
 
-No existe ninguna forma de volverse administrador desde la propia web — es intencional (evita escalamiento de privilegios).
+Luego crea las tablas, triggers y procedimientos:
 
-## Qué puedes hacer
+```powershell
+cd C:\dev\EncuentraU\backend
+.\venv\Scripts\flask.exe db upgrade
+```
 
-- Registrarte, iniciar sesión, recuperar contraseña.
-- Reportar un objeto perdido o encontrado.
-- Buscar y filtrar reportes (por tipo, categoría, texto, ubicación).
-- Ver posibles coincidencias entre tus reportes y los de otros.
-- Solicitar la recuperación de un objeto (con verificación por un administrador).
-- Como administrador: gestionar reportes, solicitudes y usuarios.
+### 3. Arrancar
+
+```powershell
+.\venv\Scripts\python.exe app.py
+```
+
+Abre **http://127.0.0.1:5000**. En desarrollo los correos (verificación, recuperación, avisos) **se imprimen en esta terminal**: copia de ahí el enlace de verificación.
+
+## Crear el primer administrador
+
+1. Regístrate en http://127.0.0.1:5000/registro.html con tu correo `@sanmateo.edu.co` y abre el enlace de verificación que aparece en la terminal del servidor.
+2. En otra terminal:
+   ```powershell
+   cd C:\dev\EncuentraU\backend
+   .\venv\Scripts\flask.exe crear-admin tu-correo@sanmateo.edu.co
+   ```
+3. Inicia sesión: entrarás al panel del administrador. Desde **Usuarios** puedes nombrar encargados de la oficina.
+
+No existe forma de volverse administrador desde la web: es intencional.
+
+## Ver la base de datos
+
+pgAdmin 4 (viene con PostgreSQL): servidor `localhost`, base `encuentrau_dev`, usuario `encuentrau`. Detalles y consultas útiles en `docs/DATABASE.md` §13.
 
 ## Pruebas
 
-```bash
-cd backend
-pip install -r requirements-dev.txt
-pytest -v                                     # 88 pruebas automatizadas
-python tests/e2e/verificacion_navegador.py    # verificación con navegador real (requiere servidor corriendo)
+```powershell
+cd C:\dev\EncuentraU\backend
+.\venv\Scripts\python.exe -m pytest -q                         # suite completa (usa encuentrau_test y la BORRA)
+.\venv\Scripts\python.exe tests\e2e\verificacion_navegador.py  # navegador real (Edge); levanta el servidor solo
 ```
 
-Ver `docs/TESTING.md` para el detalle y `docs/evidencia/` para los resultados de la última ejecución.
+Respaldo y restauración: `database/scripts/respaldo.py` y `restaurar.py` (ver `docs/DATABASE.md` §11).
 
-## Estado del proyecto
+## Problemas comunes
 
-Ver `docs/VERSION_1.0.md` para el informe completo de cierre de esta versión, incluyendo qué está desplegado en producción, qué sigue pendiente y por qué.
+- **`UnicodeDecodeError ... byte 0xf3` al conectar**: PostgreSQL rechazó el usuario o la contraseña, pero envió el error en español y psycopg2 no lo pudo leer. Revisa que corriste `crear_bd_local.sql` con las mismas claves que hay en `.env`.
+- **`DATABASE_URL no está definida o no es PostgreSQL`**: falta `backend\.env` o sus URLs.
+- **No llega el correo de verificación**: en desarrollo no se envía, se imprime en la terminal del servidor. También puedes usar `.\venv\Scripts\flask.exe verificar-correo tu-correo@sanmateo.edu.co`.

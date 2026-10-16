@@ -1,0 +1,57 @@
+# Integración continua: en cada push y pull request, GitHub Actions levanta
+# un PostgreSQL limpio en la nube, crea los mismos usuarios que en local
+# (dueño + aplicación con permisos mínimos) y ejecuta toda la suite de pytest.
+# Si una prueba falla, el cambio queda marcado en rojo en GitHub.
+
+name: Pruebas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      # Claves solo para esta base de datos temporal de CI (se destruye al terminar)
+      CLAVE_DUENO: ci_dueno_clave_temporal
+      CLAVE_APP: ci_app_clave_temporal
+      TEST_DATABASE_URL: postgresql://encuentrau_app:ci_app_clave_temporal@localhost:5432/encuentrau_test
+      TEST_DATABASE_URL_MIGRACIONES: postgresql://encuentrau:ci_dueno_clave_temporal@localhost:5432/encuentrau_test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+
+      - name: Instalar dependencias
+        run: pip install -r backend/requirements-dev.txt
+
+      - name: Crear usuarios y bases de datos de prueba
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -v clave="$CLAVE_DUENO" -v clave_app="$CLAVE_APP" \
+            -f database/scripts/crear_bd_local.sql
+
+      - name: Ejecutar pytest
+        working-directory: backend
+        run: pytest -q
