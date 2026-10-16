@@ -14,6 +14,8 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 LIMITE_LOGIN = '10 per minute'
 LIMITE_REGISTRO = '5 per minute'
 LIMITE_RECUPERACION = '5 per minute'
+LIMITE_VERIFICACION = '10 per minute'
+LIMITE_REENVIO = '3 per 10 minutes'
 
 
 @auth_bp.route('/csrf-token', methods=['GET'])
@@ -44,6 +46,18 @@ def logout():
 @auth_bp.route('/sesion', methods=['GET'])
 def sesion():
     return auth_controller.sesion_actual()
+
+
+@auth_bp.route('/verificar-correo', methods=['POST'])
+@limiter.limit(LIMITE_VERIFICACION)
+def verificar_correo():
+    return auth_controller.verificar_correo()
+
+
+@auth_bp.route('/reenviar-verificacion', methods=['POST'])
+@limiter.limit(LIMITE_REENVIO)
+def reenviar_verificacion():
+    return auth_controller.reenviar_verificacion()
 
 
 @auth_bp.route('/recuperar', methods=['POST'])

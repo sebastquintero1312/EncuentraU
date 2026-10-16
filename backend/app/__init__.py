@@ -4,17 +4,22 @@
 
 import os
 
-import click
-from flask import Flask, send_from_directory
+from flask import Flask, request, send_from_directory
 from flask_cors import CORS
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.config.config import Config
 from app.extensions import limiter, csrf, db, migrate
+from app.auditoria_contexto import registrar_contexto_auditoria
+from app.comandos import registrar_comandos
 from app.middlewares.manejo_errores import registrar_manejadores_error
 from app.routes.auth_routes import auth_bp
 from app.routes.objetos_routes import objetos_bp
 from app.routes.solicitudes_routes import solicitudes_bp
+from app.routes.oficina_routes import oficina_bp
 from app.routes.admin_routes import admin_bp
+from app.routes.general_routes import general_bp
+import app.models  # noqa: F401  (registra todos los modelos en SQLAlchemy)
 
 # El frontend estático (HTML/CSS/JS) vive en frontend/public, un nivel arriba
 # de backend/. Se sirve desde el mismo origen que la API para evitar CORS
@@ -24,23 +29,29 @@ CARPETA_FRONTEND = os.path.join(RAIZ_PROYECTO, 'frontend', 'public')
 
 
 def create_app(config_overrides=None):
-    """`config_overrides`: usado SOLO por las pruebas, para apuntar a una
-    base de datos temporal aislada. Debe aplicarse ANTES de db.init_app():
+    """`config_overrides`: usado SOLO por las pruebas, para apuntar a la base
+    de datos de pruebas. Debe aplicarse ANTES de db.init_app():
     Flask-SQLAlchemy resuelve y cachea el engine en ese momento a partir de
     app.config, así que cambiar app.config['SQLALCHEMY_DATABASE_URI'] DESPUÉS
     de create_app() no tiene ningún efecto (bug real encontrado durante la
-    revisión final de v1.0 — antes de esta corrección, todas las pruebas de
-    pytest terminaban usando silenciosamente backend/instance/encuentrau_dev.db
-    en lugar del archivo temporal que creían estar usando)."""
-    Config.validar_configuracion_produccion()
-
+    revisión final de v1.0)."""
     app = Flask(__name__, static_folder=CARPETA_FRONTEND, static_url_path='')
     app.config.from_object(Config)
     if config_overrides:
         app.config.update(config_overrides)
+    Config.validar_configuracion(app.config)
+
+    # Detrás de un proxy (Render), la IP real del cliente llega en
+    # X-Forwarded-For. Sin esto, el límite de peticiones y la auditoría verían
+    # a todos los usuarios con la IP del proxy. Solo se activa si NUM_PROXIES
+    # lo indica: confiar en ese encabezado sin un proxy real permitiría
+    # falsificar la IP.
+    if app.config['NUM_PROXIES'] > 0:
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=app.config['NUM_PROXIES'], x_proto=app.config['NUM_PROXIES'])
 
     db.init_app(app)
     migrate.init_app(app, db)
+    registrar_contexto_auditoria()
 
     # Frontend y API viven en el mismo origen (Flask sirve frontend/public),
     # así que en producción no hace falta CORS cross-origin en absoluto. Los
@@ -55,11 +66,10 @@ def create_app(config_overrides=None):
     limiter.init_app(app)
     csrf.init_app(app)
 
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(objetos_bp)
-    app.register_blueprint(solicitudes_bp)
-    app.register_blueprint(admin_bp)
+    for blueprint in (auth_bp, objetos_bp, solicitudes_bp, oficina_bp, admin_bp, general_bp):
+        app.register_blueprint(blueprint)
     registrar_manejadores_error(app)
+    registrar_comandos(app)
 
     @app.after_request
     def agregar_cabeceras_seguridad(response):
@@ -69,15 +79,24 @@ def create_app(config_overrides=None):
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
         response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+        # Todo (scripts, estilos, fuentes, íconos) se sirve desde el mismo
+        # servidor: no se carga nada de dominios externos.
         response.headers['Content-Security-Policy'] = (
             "default-src 'self'; "
             "script-src 'self'; "
-            "style-src 'self' 'unsafe-inline'; "
+            "style-src 'self'; "
             "img-src 'self' data:; "
+            "font-src 'self'; "
+            "connect-src 'self'; "
             "object-src 'none'; "
             "base-uri 'self'; "
+            "form-action 'self'; "
             "frame-ancestors 'none'"
         )
+        if request.path.startswith('/api/'):
+            # Las respuestas de la API contienen datos personales: que ningún
+            # navegador ni proxy intermedio las guarde en caché.
+            response.headers['Cache-Control'] = 'no-store'
         if Config.ES_PRODUCCION:
             response.headers['Strict-Transport-Security'] = 'max-age=63072000; includeSubDomains'
         return response
@@ -90,24 +109,5 @@ def create_app(config_overrides=None):
     @app.route('/')
     def index():
         return send_from_directory(CARPETA_FRONTEND, 'index.html')
-
-    @app.cli.command('crear-admin')
-    @click.argument('correo')
-    def crear_admin(correo):
-        """Promueve a un usuario ya registrado a rol 'administrador'.
-        Se ejecuta manualmente desde el servidor (nunca por HTTP), para que
-        no exista ninguna forma de auto-promoverse a admin desde la web.
-        Uso: flask crear-admin correo@sanmateo.edu.co
-        """
-        from app.models.usuario import buscar_por_correo
-
-        correo = correo.strip().lower()
-        usuario = buscar_por_correo(correo)
-        if not usuario:
-            print(f'No existe ningún usuario registrado con el correo {correo}. Debe registrarse primero desde la web.')
-            return
-        usuario.rol = 'administrador'
-        db.session.commit()
-        print(f'Usuario {correo} promovido a administrador correctamente.')
 
     return app

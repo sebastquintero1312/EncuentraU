@@ -4,68 +4,48 @@
 from flask import request, jsonify, session
 from flask_wtf.csrf import generate_csrf
 
-from app.extensions import db
-from app.models.usuario import crear_usuario, buscar_por_correo, buscar_por_id, usuario_publico
-from app.services import auth_service
-from app.services.recuperacion_service import generar_token_para_usuario, obtener_usuario_id_si_token_valido, confirmar_uso_token
+from app.models.usuario import buscar_por_correo, buscar_por_id, usuario_publico
+from app.services import auth_service, cuentas_service
+
+MENSAJE_REGISTRO = ('Revisa tu correo institucional: te enviamos un enlace para activar tu cuenta. '
+                    'Si no lo ves, busca en la carpeta de spam.')
+MENSAJE_GENERICO_CORREO = 'Si el correo está registrado, recibirás instrucciones para continuar.'
 
 
-def _campo_vacio(valor):
-    return valor is None or str(valor).strip() == ''
+def _datos():
+    datos = request.get_json(silent=True)
+    return datos if isinstance(datos, dict) else {}
 
 
 def registrar():
-    datos = request.get_json(silent=True) or {}
-
-    primer_nombre = (datos.get('primer_nombre') or '').strip()
-    primer_apellido = (datos.get('primer_apellido') or '').strip()
-    correo = (datos.get('correo') or '').strip().lower()
-    password = datos.get('contrasena') or ''
-    confirmar = datos.get('confirmar_contrasena') or ''
-
-    errores = {}
-
-    if _campo_vacio(primer_nombre):
-        errores['primer_nombre'] = 'El primer nombre es obligatorio'
-    if _campo_vacio(primer_apellido):
-        errores['primer_apellido'] = 'El primer apellido es obligatorio'
-    if _campo_vacio(correo):
-        errores['correo'] = 'El correo es obligatorio'
-    elif not auth_service.correo_valido(correo):
-        errores['correo'] = 'El correo no tiene un formato válido'
-    elif buscar_por_correo(correo):
-        errores['correo'] = 'Este correo ya está registrado'
-
-    if password != confirmar:
-        errores['confirmar_contrasena'] = 'Las contraseñas no coinciden'
-
-    errores_password = auth_service.validar_contrasena(password, correo=correo, nombre=primer_nombre)
-    if errores_password:
-        errores['contrasena'] = errores_password
-
+    errores = cuentas_service.registrar(_datos())
     if errores:
         return jsonify({'mensaje': 'No fue posible completar el registro', 'errores': errores}), 400
-
-    password_hash = auth_service.crear_hash(password)
-    usuario = crear_usuario(datos, password_hash)
-
-    return jsonify({'mensaje': 'Cuenta creada correctamente', 'usuario': usuario_publico(usuario)}), 201
+    # Misma respuesta exista o no la cuenta (no revela qué correos están registrados)
+    return jsonify({'mensaje': MENSAJE_REGISTRO}), 201
 
 
 def iniciar_sesion():
-    datos = request.get_json(silent=True) or {}
-    correo = (datos.get('correo') or '').strip().lower()
-    password = datos.get('contrasena') or ''
+    datos = _datos()
+    correo = datos.get('correo') if isinstance(datos.get('correo'), str) else ''
+    password = datos.get('contrasena') if isinstance(datos.get('contrasena'), str) else ''
 
     # Mensaje genérico a propósito: no decimos si el correo existe o no
     mensaje_error = 'Correo o contraseña incorrectos'
-
-    if _campo_vacio(correo) or _campo_vacio(password):
+    if not correo.strip() or not password:
         return jsonify({'mensaje': mensaje_error}), 401
 
     usuario = buscar_por_correo(correo)
     if not usuario or not usuario.activo or not auth_service.verificar_password(password, usuario.password_hash):
         return jsonify({'mensaje': mensaje_error}), 401
+
+    # Solo quien conoce la contraseña llega a este mensaje, así que no
+    # revela nada a un atacante que esté probando correos.
+    if not usuario.correo_verificado:
+        return jsonify({
+            'mensaje': 'Antes de entrar debes confirmar tu correo con el enlace que te enviamos.',
+            'codigo': 'correo_no_verificado',
+        }), 403
 
     session.clear()
     session['usuario_id'] = usuario.id
@@ -75,19 +55,16 @@ def iniciar_sesion():
     # anterior (protección anti session-fixation). Se genera uno nuevo y se
     # devuelve al frontend para que pueda seguir haciendo peticiones
     # protegidas inmediatamente, sin tener que pedirlo de nuevo aparte.
-    nuevo_csrf_token = generate_csrf()
-
     return jsonify({
         'mensaje': 'Sesión iniciada',
         'usuario': usuario_publico(usuario),
-        'csrf_token': nuevo_csrf_token,
+        'csrf_token': generate_csrf(),
     }), 200
 
 
 def cerrar_sesion():
     session.clear()
-    nuevo_csrf_token = generate_csrf()
-    return jsonify({'mensaje': 'Sesión cerrada', 'csrf_token': nuevo_csrf_token}), 200
+    return jsonify({'mensaje': 'Sesión cerrada', 'csrf_token': generate_csrf()}), 200
 
 
 def sesion_actual():
@@ -101,55 +78,32 @@ def sesion_actual():
     return jsonify({'usuario': usuario_publico(usuario)}), 200
 
 
-def solicitar_recuperacion():
-    datos = request.get_json(silent=True) or {}
-    correo = (datos.get('correo') or '').strip().lower()
+def verificar_correo():
+    if not cuentas_service.verificar_correo(_datos().get('token')):
+        return jsonify({'mensaje': 'El enlace no es válido o ya expiró. Pide uno nuevo desde la página de inicio de sesión.'}), 400
+    return jsonify({'mensaje': 'Tu correo quedó verificado. Ya puedes iniciar sesión.'}), 200
 
+
+def reenviar_verificacion():
+    cuentas_service.reenviar_verificacion(_datos().get('correo'))
+    return jsonify({'mensaje': 'Si la cuenta existe y aún no está verificada, te enviamos un enlace nuevo.'}), 200
+
+
+def solicitar_recuperacion():
     # IMPORTANTE: siempre devolvemos el mismo mensaje, exista o no el correo,
     # para no permitir que alguien detecte qué correos están registrados.
-    mensaje_generico = {'mensaje': 'Si el correo está registrado, recibirás instrucciones para continuar.'}
-
-    if _campo_vacio(correo) or not auth_service.correo_valido(correo):
-        return jsonify(mensaje_generico), 200
-
-    usuario = buscar_por_correo(correo)
-    if usuario and usuario.activo:
-        token = generar_token_para_usuario(usuario.id)
-        # Todavía no hay envío de correo real (fase futura).
-        # Por ahora solo lo dejamos en el log del servidor para poder probar el flujo.
-        print(f'[EncuentraU] Token de recuperación para {correo}: {token}')
-
-    return jsonify(mensaje_generico), 200
+    cuentas_service.solicitar_recuperacion(_datos().get('correo'))
+    return jsonify({'mensaje': MENSAJE_GENERICO_CORREO}), 200
 
 
 def restablecer_contrasena():
-    datos = request.get_json(silent=True) or {}
-    token = datos.get('token') or ''
-    password = datos.get('contrasena') or ''
-    confirmar = datos.get('confirmar_contrasena') or ''
-
-    if _campo_vacio(token):
-        return jsonify({'mensaje': 'El enlace no es válido o expiró'}), 400
-
-    if password != confirmar:
-        return jsonify({'mensaje': 'Las contraseñas no coinciden'}), 400
-
-    usuario_id, registro = obtener_usuario_id_si_token_valido(token)
-    if usuario_id is None:
-        return jsonify({'mensaje': 'El enlace no es válido o expiró'}), 400
-
-    usuario = buscar_por_id(usuario_id)
-    if not usuario:
-        return jsonify({'mensaje': 'El enlace no es válido o expiró'}), 400
-
-    errores_password = auth_service.validar_contrasena(password, correo=usuario.correo, nombre=usuario.primer_nombre)
-    if errores_password:
-        # El token NO se invalida aquí: la persona debe poder reintentar
-        # con una contraseña válida usando el mismo enlace.
-        return jsonify({'mensaje': 'La contraseña no cumple los requisitos', 'errores': errores_password}), 400
-
-    usuario.password_hash = auth_service.crear_hash(password)
-    db.session.commit()
-    confirmar_uso_token(registro)
-
-    return jsonify({'mensaje': 'Contraseña actualizada correctamente'}), 200
+    datos = _datos()
+    ok, mensaje, errores = cuentas_service.restablecer_contrasena(
+        datos.get('token'), datos.get('contrasena'), datos.get('confirmar_contrasena'),
+    )
+    if not ok:
+        respuesta = {'mensaje': mensaje}
+        if errores:
+            respuesta['errores'] = errores
+        return jsonify(respuesta), 400
+    return jsonify({'mensaje': mensaje}), 200

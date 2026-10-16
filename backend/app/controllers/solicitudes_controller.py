@@ -1,79 +1,60 @@
-# Controladores del proceso de reclamación (solicitudes).
+# Controladores de reclamaciones del lado del ESTUDIANTE.
 
 from flask import request, jsonify
 
 from app.extensions import db
-from app.models.solicitud import Solicitud, ESTADOS_VALIDOS
-from app.services import solicitudes_service
-from app.utils import parametros_paginacion
+from app.models.solicitud import Solicitud
+from app.services import oficina_service, solicitudes_service
+from app.utils import parametros_paginacion, respuesta_paginada
 
 
-def crear(usuario_actual):
-    datos = request.get_json(silent=True) or {}
-    objeto_id = datos.get('objeto_id')
+def _datos():
+    datos = request.get_json(silent=True)
+    return datos if isinstance(datos, dict) else {}
 
-    if not isinstance(objeto_id, int):
-        try:
-            objeto_id = int(objeto_id)
-        except (TypeError, ValueError):
-            return jsonify({'mensaje': 'objeto_id inválido'}), 400
 
-    errores, solicitud = solicitudes_service.crear_solicitud(
-        objeto_id, usuario_actual, datos.get('contacto'), datos.get('mensaje'),
-    )
+def _solicitud_propia(estudiante, solicitud_id):
+    solicitud = db.session.get(Solicitud, solicitud_id)
+    if solicitud is None:
+        return None, (jsonify({'mensaje': 'Reclamación no encontrada'}), 404)
+    if solicitud.solicitante_id != estudiante.id:
+        return None, (jsonify({'mensaje': 'No autorizado'}), 403)
+    return solicitud, None
+
+
+def crear(estudiante):
+    errores, solicitud = solicitudes_service.crear_solicitud(estudiante, _datos())
     if errores:
-        return jsonify({'mensaje': 'No fue posible enviar la solicitud', 'errores': errores}), 400
-    return jsonify({'mensaje': 'Solicitud enviada correctamente', 'solicitud': solicitud.publica()}), 201
+        return jsonify({'mensaje': 'No fue posible enviar la reclamación', 'errores': errores}), 400
+    return jsonify({'mensaje': 'Reclamación enviada correctamente', 'solicitud': solicitud.vista_estudiante()}), 201
 
 
-def mis_solicitudes(usuario_actual):
+def mis_solicitudes(estudiante):
+    oficina_service.vencer_reservas()
     pagina, por_pagina = parametros_paginacion(request)
-    query = Solicitud.query.filter(Solicitud.solicitante_id == usuario_actual.id).order_by(Solicitud.created_at.desc())
-    paginado = query.paginate(page=pagina, per_page=por_pagina, error_out=False)
-    return jsonify({
-        'datos': [s.publica() for s in paginado.items],
-        'total': paginado.total,
-        'pagina': pagina,
-        'por_pagina': por_pagina,
-    }), 200
+    paginado = solicitudes_service.mis_solicitudes(estudiante, pagina, por_pagina)
+    return jsonify(respuesta_paginada(paginado, pagina, por_pagina, lambda s: s.vista_estudiante())), 200
 
 
-def cancelar(usuario_actual, solicitud_id):
-    solicitud = db.session.get(Solicitud, solicitud_id)
-    if not solicitud:
-        return jsonify({'mensaje': 'Solicitud no encontrada'}), 404
-    if solicitud.solicitante_id != usuario_actual.id:
-        return jsonify({'mensaje': 'No autorizado'}), 403
+def cancelar(estudiante, solicitud_id):
+    solicitud, error = _solicitud_propia(estudiante, solicitud_id)
+    if error:
+        return error
     if not solicitudes_service.cancelar_solicitud(solicitud):
-        return jsonify({'mensaje': f'No se puede cancelar una solicitud en estado "{solicitud.estado}"'}), 400
-    return jsonify({'mensaje': 'Solicitud cancelada correctamente', 'solicitud': solicitud.publica()}), 200
+        return jsonify({'mensaje': 'Esta reclamación ya está cerrada'}), 400
+    return jsonify({'mensaje': 'Reclamación cancelada', 'solicitud': solicitud.vista_estudiante()}), 200
 
 
-def listar_admin():
-    pagina, por_pagina = parametros_paginacion(request)
-    query = Solicitud.query
-    estado = request.args.get('estado')
-    if estado in ESTADOS_VALIDOS:
-        query = query.filter(Solicitud.estado == estado)
-    query = query.order_by(Solicitud.created_at.desc())
-    paginado = query.paginate(page=pagina, per_page=por_pagina, error_out=False)
+def generar_codigo(estudiante, solicitud_id):
+    oficina_service.vencer_reservas()
+    solicitud, error = _solicitud_propia(estudiante, solicitud_id)
+    if error:
+        return error
+    codigo, mensaje_error = solicitudes_service.generar_codigo_retiro(solicitud)
+    if mensaje_error:
+        return jsonify({'mensaje': mensaje_error}), 400
     return jsonify({
-        'datos': [s.publica() for s in paginado.items],
-        'total': paginado.total,
-        'pagina': pagina,
-        'por_pagina': por_pagina,
+        'mensaje': 'Código generado. Anótalo: por seguridad no se puede volver a mostrar.',
+        'codigo': codigo,
+        'vence_en': solicitud.vence_en.isoformat(),
     }), 200
-
-
-def revisar_admin(solicitud_id):
-    solicitud = db.session.get(Solicitud, solicitud_id)
-    if not solicitud:
-        return jsonify({'mensaje': 'Solicitud no encontrada'}), 404
-
-    datos = request.get_json(silent=True) or {}
-    ok, error = solicitudes_service.revisar_solicitud(
-        solicitud, datos.get('estado'), datos.get('respuesta_admin'),
-    )
-    if not ok:
-        return jsonify({'mensaje': error}), 400
-    return jsonify({'mensaje': 'Solicitud actualizada correctamente', 'solicitud': solicitud.publica()}), 200

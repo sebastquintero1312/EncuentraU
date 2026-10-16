@@ -1,14 +1,18 @@
-# Reglas de negocio de autenticación: validar y guardar contraseñas.
+# Reglas de negocio de autenticación: validar y guardar contraseñas, validar
+# correos institucionales.
 #
 # IMPORTANTE: esta es la validación DEFINITIVA. El frontend valida solo
 # para dar una buena experiencia al usuario, pero nunca hay que confiar
 # en lo que llega del navegador: aquí se repite todo.
 
 import re
+
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHashError
+from flask import current_app
 
 LONGITUD_MINIMA = 12
+LONGITUD_MAXIMA = 128  # evita hashear textos gigantes a propósito (abuso de CPU)
 
 _hasher = PasswordHasher()
 
@@ -29,16 +33,20 @@ PATRON_CORREO = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
 def validar_contrasena(password, correo='', nombre=''):
     """Devuelve una lista de errores. Lista vacía = contraseña válida."""
     errores = []
+    if not isinstance(password, str):
+        password = ''
 
-    if not password or len(password) < LONGITUD_MINIMA:
+    if len(password) < LONGITUD_MINIMA:
         errores.append(f'La contraseña debe tener al menos {LONGITUD_MINIMA} caracteres')
-    if not PATRON_MAYUSCULA.search(password or ''):
+    if len(password) > LONGITUD_MAXIMA:
+        errores.append(f'La contraseña no puede tener más de {LONGITUD_MAXIMA} caracteres')
+    if not PATRON_MAYUSCULA.search(password):
         errores.append('Debe incluir al menos una letra mayúscula')
-    if not PATRON_MINUSCULA.search(password or ''):
+    if not PATRON_MINUSCULA.search(password):
         errores.append('Debe incluir al menos una letra minúscula')
-    if not PATRON_NUMERO.search(password or ''):
+    if not PATRON_NUMERO.search(password):
         errores.append('Debe incluir al menos un número')
-    if not PATRON_ESPECIAL.search(password or ''):
+    if not PATRON_ESPECIAL.search(password):
         errores.append('Debe incluir al menos un carácter especial (! @ # $ % ^ & * ( ) _ - + =)')
     if password and password.lower() in CONTRASENAS_COMUNES:
         errores.append('Esta contraseña es demasiado común, elige otra')
@@ -57,7 +65,14 @@ def validar_contrasena(password, correo='', nombre=''):
 
 
 def correo_valido(correo):
-    return bool(correo) and bool(PATRON_CORREO.match(correo))
+    return isinstance(correo, str) and len(correo) <= 255 and bool(PATRON_CORREO.match(correo))
+
+
+def correo_institucional(correo):
+    """Solo se aceptan correos del dominio de la universidad
+    (DOMINIO_CORREO_INSTITUCIONAL, por defecto sanmateo.edu.co)."""
+    dominio = current_app.config['DOMINIO_CORREO_INSTITUCIONAL']
+    return correo_valido(correo) and correo.lower().endswith('@' + dominio)
 
 
 def crear_hash(password):
@@ -67,6 +82,8 @@ def crear_hash(password):
 
 
 def verificar_password(password, password_hash):
+    if not isinstance(password, str) or len(password) > LONGITUD_MAXIMA:
+        return False
     try:
         return _hasher.verify(password_hash, password)
     except (VerifyMismatchError, VerificationError, InvalidHashError):

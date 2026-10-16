@@ -1,74 +1,136 @@
 # Modelo de Objeto (reporte de objeto perdido o encontrado).
 #
-# Un "objeto" es el registro de un reporte hecho por un usuario. Puede ser
-# de tipo 'perdido' o 'encontrado'. Ver docs/API.md y la skill
-# objetos-perdidos para las reglas de negocio y las transiciones de estado.
-
-from datetime import datetime
+# Verificación a ciegas (ver docs/AUTHORIZATION.md): cada reporte tiene una
+# parte PÚBLICA (nombre genérico, categoría, ubicación, fecha) y una parte
+# PRIVADA (descripción con marca, color, señas). La parte privada solo la ven
+# quien hizo el reporte, el encargado y el administrador. Por eso existen
+# tres formas distintas de convertir un objeto a JSON (vista_publica,
+# vista_propietario, vista_oficina): cada una se usa según quién pregunta.
+#
+# Estados y transiciones: viven como DATOS en las tablas estados_objeto y
+# transiciones_objeto, y un trigger de PostgreSQL rechaza cualquier cambio de
+# estado que no esté permitido (ver migrations/sql/02_funciones_triggers.sql).
 
 from app.extensions import db
 
-TIPOS_VALIDOS = ('perdido', 'encontrado')
-CATEGORIAS_VALIDAS = ('Tecnología', 'Accesorios', 'Útiles', 'Documentos', 'Ropa', 'Otro')
-ESTADOS_VALIDOS = ('activo', 'en_proceso', 'resuelto', 'cerrado', 'cancelado')
+TIPO_PERDIDO = 'perdido'
+TIPO_ENCONTRADO = 'encontrado'
+TIPOS_VALIDOS = (TIPO_PERDIDO, TIPO_ENCONTRADO)
 
-# Transiciones de estado permitidas (origen -> destinos posibles)
-TRANSICIONES_VALIDAS = {
-    'activo': {'en_proceso', 'cancelado', 'cerrado'},
-    'en_proceso': {'resuelto', 'activo', 'cerrado'},
-    'resuelto': set(),
-    'cerrado': set(),
-    'cancelado': set(),
-}
+ESTADO_INICIAL = {TIPO_PERDIDO: 'buscando', TIPO_ENCONTRADO: 'pendiente_entrega'}
+# Objetos encontrados que están físicamente en la oficina: los únicos que un
+# estudiante puede ver en la búsqueda y reclamar.
+ESTADOS_DISPONIBLES = ('en_oficina', 'reservado')
+
+
+class EstadoObjeto(db.Model):
+    __tablename__ = 'estados_objeto'
+
+    tipo = db.Column(db.String(20), primary_key=True)
+    codigo = db.Column(db.String(20), primary_key=True)
+    nombre = db.Column(db.String(50), nullable=False)
+    descripcion = db.Column(db.String(255), nullable=False)
+    es_inicial = db.Column(db.Boolean, nullable=False)
+    es_final = db.Column(db.Boolean, nullable=False)
+
+
+class TransicionObjeto(db.Model):
+    __tablename__ = 'transiciones_objeto'
+
+    tipo = db.Column(db.String(20), primary_key=True)
+    estado_origen = db.Column(db.String(20), primary_key=True)
+    estado_destino = db.Column(db.String(20), primary_key=True)
+    actor = db.Column(db.String(20), nullable=False)
+
+
+def transicion_permitida(tipo, origen, destino, actor):
+    return db.session.query(TransicionObjeto.tipo).filter_by(
+        tipo=tipo, estado_origen=origen, estado_destino=destino, actor=actor,
+    ).first() is not None
 
 
 class Objeto(db.Model):
     __tablename__ = 'objetos'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, db.Identity(always=True), primary_key=True)
     tipo = db.Column(db.String(20), nullable=False)
     nombre = db.Column(db.String(120), nullable=False)
-    categoria = db.Column(db.String(50), nullable=False)
-    descripcion = db.Column(db.String(300), nullable=False)
-    ubicacion = db.Column(db.String(150), nullable=False)
+    categoria_id = db.Column(db.Integer, db.ForeignKey('categorias.id'), nullable=False)
+    ubicacion_id = db.Column(db.Integer, db.ForeignKey('ubicaciones.id'), nullable=False)
     fecha_evento = db.Column(db.Date, nullable=False)
-    imagen_url = db.Column(db.String(500), nullable=True)
-    estado = db.Column(db.String(20), nullable=False, default='activo', index=True)
+    descripcion = db.Column(db.String(500), nullable=False)
+    detalle_ubicacion = db.Column(db.String(150), nullable=False, server_default='')
+    estado = db.Column(db.String(20), nullable=False)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    recibido_por_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=True)
+    recibido_en = db.Column(db.DateTime(timezone=True), nullable=True)
+    observaciones_custodia = db.Column(db.String(500), nullable=False, server_default='')
+    motivo_cierre = db.Column(db.String(300), nullable=False, server_default='')
+    version = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime(timezone=True), nullable=False, server_default=db.func.now(),
+                           server_onupdate=db.FetchedValue())
 
-    usuario = db.relationship('Usuario', backref=db.backref('objetos', lazy='dynamic'))
+    categoria = db.relationship('Categoria')
+    ubicacion = db.relationship('Ubicacion')
+    usuario = db.relationship('Usuario', foreign_keys=[usuario_id])
+    recibido_por = db.relationship('Usuario', foreign_keys=[recibido_por_id])
 
-    __table_args__ = (
-        db.CheckConstraint("tipo IN ('perdido','encontrado')", name='ck_objeto_tipo'),
-        db.CheckConstraint(
-            "estado IN ('activo','en_proceso','resuelto','cerrado','cancelado')",
-            name='ck_objeto_estado',
-        ),
-    )
+    # version_id_col: control de concurrencia OPTIMISTA. SQLAlchemy agrega
+    # "AND version = <la que leí>" a cada UPDATE; si otra transacción cambió
+    # la fila en el medio, el UPDATE no afecta ninguna fila y se lanza
+    # StaleDataError (la API responde 409 Conflict).
+    __mapper_args__ = {'version_id_col': version, 'eager_defaults': True}
 
-    def puede_transicionar_a(self, nuevo_estado):
-        return nuevo_estado in TRANSICIONES_VALIDAS.get(self.estado, set())
+    @property
+    def disponible_para_reclamar(self):
+        return self.tipo == TIPO_ENCONTRADO and self.estado in ESTADOS_DISPONIBLES
 
-    def publico(self, incluir_correo_reportante=False):
-        """Versión segura del objeto para la API pública: nunca expone el
-        correo del reportante salvo que se pida explícitamente (ej. al dueño
-        del propio reporte)."""
-        datos = {
+    def nombre_estado(self):
+        estado = db.session.get(EstadoObjeto, (self.tipo, self.estado))
+        return estado.nombre if estado else self.estado
+
+    def vista_publica(self):
+        """Lo que puede ver cualquier estudiante. SIN descripción privada y
+        sin datos de quién lo reportó."""
+        return {
             'id': self.id,
             'tipo': self.tipo,
             'nombre': self.nombre,
-            'categoria': self.categoria,
-            'descripcion': self.descripcion,
-            'ubicacion': self.ubicacion,
+            'categoria': self.categoria.nombre if self.categoria else None,
+            'categoria_id': self.categoria_id,
+            'ubicacion': self.ubicacion.nombre if self.ubicacion else None,
+            'ubicacion_id': self.ubicacion_id,
             'fecha_evento': self.fecha_evento.isoformat() if self.fecha_evento else None,
-            'imagen_url': self.imagen_url,
             'estado': self.estado,
-            'usuario_id': self.usuario_id,
-            'usuario_nombre': f'{self.usuario.primer_nombre} {self.usuario.primer_apellido}'.strip() if self.usuario else None,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'estado_nombre': self.nombre_estado(),
+            'recibido_en': self.recibido_en.isoformat() if self.recibido_en else None,
         }
-        if incluir_correo_reportante and self.usuario:
-            datos['usuario_correo'] = self.usuario.correo
+
+    def vista_propietario(self):
+        """Para quien hizo el reporte: incluye su propia descripción privada."""
+        datos = self.vista_publica()
+        datos.update({
+            'descripcion': self.descripcion,
+            'detalle_ubicacion': self.detalle_ubicacion,
+            'motivo_cierre': self.motivo_cierre,
+            'version': self.version,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        })
+        return datos
+
+    def vista_oficina(self):
+        """Para el encargado y el administrador: todo, incluido quién lo
+        reportó y quién lo recibió en la oficina."""
+        datos = self.vista_propietario()
+        datos.update({
+            'observaciones_custodia': self.observaciones_custodia,
+            'reportado_por': {
+                'id': self.usuario.id,
+                'nombre': self.usuario.nombre_completo,
+                'correo': self.usuario.correo,
+            } if self.usuario else None,
+            'recibido_por': self.recibido_por.nombre_completo if self.recibido_por else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        })
         return datos
