@@ -138,7 +138,7 @@ Cada uno vuelve a comprobar en la base de datos que quien actúa es un **encarga
 
 - **Permisos por columna**: `encuentrau_app` no puede cambiar el correo de un usuario, el autor o el tipo de un reporte, ni el texto de una reclamación ya enviada. Las actas de entrega solo admiten `INSERT`. La auditoría solo admite `SELECT`. Los procedimientos no se pueden ejecutar por `PUBLIC`. Doce intentos prohibidos se prueban en `test_la_aplicacion_no_tiene_permiso` (todos devuelven `42501 insufficient_privilege`).
 - **Row Level Security** activo en las 14 tablas, con una política solo para `encuentrau_app` (`test_rls_activo_en_todas_las_tablas`).
-- **Supabase** expone automáticamente las tablas del esquema `public` por su API REST a los roles `anon` y `authenticated`. EncuentraU no usa esa API: si esos roles existen, se les revocan todos los permisos y, sin política RLS, no ven ninguna fila. *(IMPLEMENTADO: no se ha ejecutado todavía contra Supabase.)*
+- **Supabase** expone automáticamente las tablas del esquema `public` por su API REST a los roles `anon` y `authenticated`. EncuentraU no usa esa API: si esos roles existen, se les revocan todos los permisos y, sin política RLS, no ven ninguna fila. *(VERIFICADO en Supabase el 2026-10-19: `anon` y `authenticated` sin ningún privilegio sobre las tablas de `public`.)*
 
 ## 11. Respaldos
 
