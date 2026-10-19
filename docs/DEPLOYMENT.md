@@ -1,12 +1,24 @@
 # DEPLOYMENT.md — Despliegue de EncuentraU v2.0
 
-## Estado real: PENDIENTE
+## Estado real: DESPLEGADO — PARCIAL (2026-10-19)
 
-- La v1.0 se llegó a desplegar en Render con su PostgreSQL gratuito. **Esa base de datos venció**: Render borra las bases gratuitas 30 días después de crearlas (14 días de gracia).
-- La v2.0 **no se ha desplegado**. `render.yaml` ya está adaptado a v2.0 (sin base de Render, sin migración al arrancar, 1 proceso de Gunicorn con 4 hilos, variables de v2.0 con `sync: false` para los secretos) y se eliminó el `Procfile` (Render usa `render.yaml`). Estado: IMPLEMENTADO, no verificado en Render. La v2.0 se niega a arrancar en producción sin Brevo, sin `URL_PUBLICA` con https y sin una base PostgreSQL migrada.
-- Decisión tomada: seguir en **Render (servicio web gratuito)** y usar **Supabase (PostgreSQL gratuito)** como base de datos.
+URL pública: **https://encuentrau.onrender.com**
 
-## Lo que hay que hacer (próxima fase)
+| Pieza | Estado | Evidencia |
+|---|---|---|
+| Supabase (PostgreSQL 17, región us-west-2) | VERIFICADO | `flask db upgrade` → `0001_esquema_v2`; 15 tablas, RLS en todas salvo `alembic_version`; `anon`/`authenticated` sin privilegios sobre las tablas. |
+| Usuario `encuentrau_app` en Supabase | VERIFICADO | Conecta por el pooler (`encuentrau_app.<id-proyecto>`); `DELETE FROM auditoria` y `CREATE TABLE` → *permission denied*. |
+| Servicio web en Render (free, Oregon) | VERIFICADO | Creado por la API de Render desde la rama `despliegue-v2`; `GET /health` → 200. |
+| HTTPS, HSTS, CSP, X-Frame-Options, nosniff, Referrer-Policy | VERIFICADO | Cabeceras de `GET /`; `http://` → 301 a `https://`. |
+| Cookie de sesión `Secure; HttpOnly; SameSite=Lax` | VERIFICADO | `GET /api/auth/csrf-token`. |
+| Brevo (API key, remitente verificado) | PARCIAL | La API key responde y el remitente está activo; falta ver llegar un correo real. |
+| Primer administrador | PENDIENTE | Requiere registrarse y verificar el correo desde la web. |
+| Secretos de respaldo en GitHub | PENDIENTE | |
+
+- La v1.0 se llegó a desplegar en Render con su PostgreSQL gratuito. Esa base venció (Render borra las bases gratuitas a los 30 días).
+- Los secretos de producción están en `backend/.env.produccion` (en `.gitignore`), solo en el PC del responsable.
+
+## Pasos (referencia para repetir el despliegue)
 
 ### 1. Supabase
 1. Crear el proyecto.

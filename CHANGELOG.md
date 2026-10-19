@@ -10,7 +10,12 @@
 - Se elimina el `Procfile` (de v1.0; Render usa `render.yaml`).
 - Nuevo `database/scripts/crear_usuario_app_supabase.sql` para crear
   `encuentrau_app` en Supabase.
-- Estado: IMPLEMENTADO. No verificado en Render todavía.
+- Desplegado en https://encuentrau.onrender.com (Render, rama `despliegue-v2`)
+  con la base en Supabase. Verificado: migración, permisos mínimos, RLS,
+  `/health`, HTTPS/HSTS/CSP y cookie `Secure`. Pendiente: correo real de
+  Brevo, primer administrador y secretos de respaldo (ver docs/DEPLOYMENT.md).
+- `User-Agent` explícito en las peticiones a Brevo (Cloudflare bloqueó el de
+  Python por defecto en una prueba).
 
 ## EncuentraU v2.0 — PostgreSQL, tres roles, reclamación segura y rediseño
 
