@@ -23,3 +23,6 @@ htmlcov/
 # Respaldos de la base de datos (contienen datos personales)
 database/respaldos/
 *.dump
+
+# Secretos de producción (Supabase, Render, Brevo): nunca al repositorio
+backend/.env.produccion
