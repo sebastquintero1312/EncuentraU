@@ -2,7 +2,7 @@
 
 Plataforma de la comunidad San Mateo para reportar y recuperar objetos perdidos, con entrega verificada en la oficina de objetos perdidos.
 
-**Versión actual: v2.0**: Flask + PostgreSQL (triggers, procedimientos almacenados, auditoría), tres roles (estudiante, encargado, administrador), reclamación con verificación a ciegas y código de retiro, verificación del correo institucional y frontend con el estilo del sitio de la universidad. **Todavía no está desplegada** (ver `docs/DEPLOYMENT.md`).
+**Versión actual: v2.0**: Flask + PostgreSQL (triggers, procedimientos almacenados, auditoría), tres roles (estudiante, encargado, administrador), reclamación con verificación a ciegas y código de retiro, verificación del correo institucional y frontend con el estilo del sitio de la universidad. **Desplegada en https://encuentrau.onrender.com** (Render + Supabase + Brevo; ver `docs/DEPLOYMENT.md`).
 
 Documentación en `docs/`: `VERSION_2.0.md` (informe), `ARQUITECTURA.md`, `DATABASE.md`, `API.md`, `AUTHENTICATION.md`, `AUTHORIZATION.md`, `BACKEND.md`, `FRONTEND.md`, `TESTING.md`, `DEPLOYMENT.md`, `MATRIZ_SEGURIDAD.md`, `DIAGRAMAS.md`, `REGLAS_100.md`. En la raíz: `SECURITY.md` y `CHANGELOG.md`.
 

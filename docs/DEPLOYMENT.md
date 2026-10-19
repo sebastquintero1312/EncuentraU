@@ -8,11 +8,11 @@ URL pública: **https://encuentrau.onrender.com**
 |---|---|---|
 | Supabase (PostgreSQL 17, región us-west-2) | VERIFICADO | `flask db upgrade` → `0001_esquema_v2`; 15 tablas, RLS en todas salvo `alembic_version`; `anon`/`authenticated` sin privilegios sobre las tablas. |
 | Usuario `encuentrau_app` en Supabase | VERIFICADO | Conecta por el pooler (`encuentrau_app.<id-proyecto>`); `DELETE FROM auditoria` y `CREATE TABLE` → *permission denied*. |
-| Servicio web en Render (free, Oregon) | VERIFICADO | Creado por la API de Render desde la rama `despliegue-v2`; `GET /health` → 200. |
+| Servicio web en Render (free, Oregon) | VERIFICADO | Creado por la API de Render; despliega automáticamente la rama `main`; `GET /health` → 200. |
 | HTTPS, HSTS, CSP, X-Frame-Options, nosniff, Referrer-Policy | VERIFICADO | Cabeceras de `GET /`; `http://` → 301 a `https://`. |
 | Cookie de sesión `Secure; HttpOnly; SameSite=Lax` | VERIFICADO | `GET /api/auth/csrf-token`. |
-| Brevo (API key, remitente verificado) | PARCIAL | La API key responde y el remitente está activo; falta ver llegar un correo real. |
-| Primer administrador | PENDIENTE | Requiere registrarse y verificar el correo desde la web. |
+| Brevo (correos) | VERIFICADO | El correo de verificación de registro llegó a un buzón `@sanmateo.edu.co` y la cuenta quedó verificada. |
+| Primer administrador | VERIFICADO | `flask crear-admin` ejecutado desde el PC contra Supabase. |
 | Secretos de respaldo en GitHub | PENDIENTE | |
 
 - La v1.0 se llegó a desplegar en Render con su PostgreSQL gratuito. Esa base venció (Render borra las bases gratuitas a los 30 días).

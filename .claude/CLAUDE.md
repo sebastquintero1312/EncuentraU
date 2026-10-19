@@ -8,11 +8,11 @@
 
 **v2.0**
 
-Estado: Flask + PostgreSQL (triggers, procedimientos, auditoría, permisos mínimos, RLS), tres roles (estudiante, encargado, administrador), reclamación con verificación a ciegas y código de retiro, verificación de correo institucional, frontend rediseñado con el estilo de sanmateo.edu.co. Verificado localmente (ver `docs/VERSION_2.0.md`). NO desplegado.
+Estado: Flask + PostgreSQL (triggers, procedimientos, auditoría, permisos mínimos, RLS), tres roles (estudiante, encargado, administrador), reclamación con verificación a ciegas y código de retiro, verificación de correo institucional, frontend rediseñado con el estilo de sanmateo.edu.co. Verificado localmente (ver `docs/VERSION_2.0.md`). Desplegado en https://encuentrau.onrender.com (2026-10-19).
 
 ## Siguiente objetivo
 
-Despliegue: Supabase (PostgreSQL) + Render (web) + Brevo (correos). Ver `docs/DEPLOYMENT.md`.
+Completar el despliegue (secretos del respaldo diario en GitHub) y verificar en producción el flujo completo de los tres roles. Ver `docs/DEPLOYMENT.md`.
 
 ---
 

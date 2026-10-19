@@ -43,7 +43,7 @@ Todo se ejecutó en un servidor **PostgreSQL 18.6 temporal** creado con los bina
 
 ## 5. Limitaciones conocidas
 
-1. **Sin despliegue**: `render.yaml` ya está adaptado a v2.0, pero falta crear Supabase, Brevo y el servicio de Render (ver `docs/DEPLOYMENT.md`).
+1. **Despliegue**: en línea en https://encuentrau.onrender.com desde el 2026-10-19; faltan los secretos del respaldo diario (ver `docs/DEPLOYMENT.md`).
 2. Brevo, el respaldo en la nube, la CI y el endurecimiento de Supabase están escritos pero no ejecutados.
 3. Los correos de un remitente genérico pueden llegar a spam en `@sanmateo.edu.co`.
 4. Límite de peticiones en memoria.

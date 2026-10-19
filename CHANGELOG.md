@@ -10,10 +10,11 @@
 - Se elimina el `Procfile` (de v1.0; Render usa `render.yaml`).
 - Nuevo `database/scripts/crear_usuario_app_supabase.sql` para crear
   `encuentrau_app` en Supabase.
-- Desplegado en https://encuentrau.onrender.com (Render, rama `despliegue-v2`)
-  con la base en Supabase. Verificado: migración, permisos mínimos, RLS,
-  `/health`, HTTPS/HSTS/CSP y cookie `Secure`. Pendiente: correo real de
-  Brevo, primer administrador y secretos de respaldo (ver docs/DEPLOYMENT.md).
+- Desplegado en https://encuentrau.onrender.com (Render, rama `main`) con la
+  base en Supabase. Verificado: migración, permisos mínimos, RLS, `/health`,
+  HTTPS/HSTS/CSP, cookie `Secure`, correo real por Brevo y primer
+  administrador. Pendiente: secretos de respaldo en GitHub (ver
+  docs/DEPLOYMENT.md).
 - Corrección: la verificación de correo y el restablecimiento de contraseña
   fallaban en producción ("The referrer header is missing"): las páginas
   usaban `no-referrer` y Flask-WTF exige el Referer en HTTPS. Ahora usan
