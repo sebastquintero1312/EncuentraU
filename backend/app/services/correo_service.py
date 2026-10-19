@@ -65,6 +65,9 @@ def _enviar_con_brevo(destinatario, nombre_destinatario, asunto, texto):
             'api-key': current_app.config['BREVO_API_KEY'],
             'Content-Type': 'application/json',
             'Accept': 'application/json',
+            # Cloudflare (delante de la API de Brevo) a veces bloquea el
+            # User-Agent por defecto de Python ("Python-urllib", error 1010).
+            'User-Agent': 'EncuentraU/2.0',
         },
     )
     try:
