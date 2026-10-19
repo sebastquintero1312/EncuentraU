@@ -19,6 +19,9 @@
   fallaban en producción ("The referrer header is missing"): las páginas
   usaban `no-referrer` y Flask-WTF exige el Referer en HTTPS. Ahora usan
   `same-origin` (el token se borra de la URL antes del POST).
+- `backend/produccion.ps1`: ejecuta los comandos de terminal (`crear-admin`,
+  `verificar-correo`, `vencer-reservas`) contra producción sin dejar la
+  terminal apuntando a Supabase.
 - `User-Agent` explícito en las peticiones a Brevo (Cloudflare bloqueó el de
   Python por defecto en una prueba).
 

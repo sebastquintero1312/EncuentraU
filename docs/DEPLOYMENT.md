@@ -48,3 +48,21 @@ Repetir `tests/e2e/verificacion_navegador.py` contra la URL pública (requiere a
 ## Variables de entorno de producción
 
 Ver la tabla de `docs/BACKEND.md` ("Variables de entorno").
+
+## Gestión de roles en producción
+
+| Rol | Cómo se asigna |
+|---|---|
+| Estudiante | Automático al registrarse con un correo `@sanmateo.edu.co`. |
+| Encargado | Un administrador, desde la web: *Panel de administrador → Usuarios → Nombrar encargado*. La cuenta debe tener el correo verificado. *Volver a estudiante* lo revierte. |
+| Administrador | Solo desde la terminal, nunca desde la web: `backend/produccion.ps1 crear-admin <correo>`. La persona debe estar registrada y con el correo verificado. |
+
+`backend/produccion.ps1` ejecuta los comandos de `backend/app/comandos.py` contra Supabase leyendo `backend/.env.produccion` (conexión `encuentrau_app`, la misma que usa Render) y al terminar restaura las variables de entorno de la terminal. Probado el 2026-10-19 con `verificar-correo` sobre una cuenta ya verificada.
+
+```powershell
+cd backend
+powershell -ExecutionPolicy Bypass -File .\produccion.ps1 crear-admin correo@sanmateo.edu.co
+powershell -ExecutionPolicy Bypass -File .\produccion.ps1 verificar-correo correo@sanmateo.edu.co
+```
+
+No existe comando para quitar el rol de administrador. Si hace falta, en el *SQL Editor* de Supabase: `UPDATE usuarios SET rol = 'estudiante' WHERE correo = '...';` (queda en la auditoría como acción del sistema).
