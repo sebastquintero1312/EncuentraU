@@ -1,20 +1,18 @@
-# Blueprint de despliegue para Render.com (https://render.com).
+# Blueprint de despliegue de EncuentraU v2.0 en Render.com (servicio web gratuito).
 #
-# Elegido tras comparar Render, Railway y PythonAnywhere (ver docs/DEPLOYMENT.md,
-# sección "Por qué Render"): es el único de los tres con un plan gratuito
-# permanente (sin tarjeta de crédito) que incluye tanto un servicio web como
-# una base de datos PostgreSQL real, con HTTPS automático.
+# La base de datos NO está en Render: es PostgreSQL de Supabase (la base
+# gratuita de Render se borra a los 30 días). Ver docs/DEPLOYMENT.md.
 #
-# Este archivo NO despliega nada por sí solo. Uso: conectar este repositorio
-# (en GitHub) a una cuenta de Render y elegir "New Blueprint" — Render lee
-# este archivo y crea el servicio web + la base de datos automáticamente.
-# Ver docs/DEPLOYMENT.md para los pasos exactos y qué requiere autorización
-# externa (cuenta de GitHub y de Render, que solo su propietario puede crear).
-
-databases:
-  - name: encuentrau-db
-    databaseName: encuentrau
-    plan: free
+# Uso: en Render, "New > Blueprint", conectar este repositorio. Las variables
+# marcadas con "sync: false" las pide Render la primera vez y se escriben a
+# mano en el panel: son secretos o dependen de las cuentas externas.
+#
+# La migración (flask db upgrade) NO se ejecuta aquí: la aplicación se conecta
+# con encuentrau_app, que no tiene permiso para crear tablas. Se ejecuta aparte
+# con el usuario dueño (DATABASE_URL_MIGRACIONES), ver docs/DEPLOYMENT.md.
+#
+# Gunicorn: 1 proceso con 4 hilos. Flask-Limiter guarda los contadores en
+# memoria del proceso; con un solo proceso los límites de peticiones son exactos.
 
 services:
   - type: web
@@ -22,7 +20,7 @@ services:
     runtime: python
     plan: free
     buildCommand: "pip install -r backend/requirements.txt"
-    startCommand: "cd backend && flask db upgrade && gunicorn --workers 2 --bind 0.0.0.0:$PORT 'app:create_app()'"
+    startCommand: "cd backend && gunicorn --workers 1 --threads 4 --bind 0.0.0.0:$PORT 'app:create_app()'"
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
@@ -33,10 +31,26 @@ services:
         value: production
       - key: SECRET_KEY
         generateValue: true
+      # Render pone delante un proxy (1 salto): necesario para conocer la IP
+      # real del cliente (límite de peticiones) y que la app sepa que va por HTTPS.
+      - key: NUM_PROXIES
+        value: "1"
+      - key: DOMINIO_CORREO_INSTITUCIONAL
+        value: sanmateo.edu.co
+      - key: CORREO_PROVEEDOR
+        value: brevo
+      - key: CORREO_REMITENTE_NOMBRE
+        value: EncuentraU
+      # URL del pooler de Supabase (modo Session, puerto 5432) con el usuario
+      # encuentrau_app y ?sslmode=require. Nunca la del usuario dueño.
       - key: DATABASE_URL
-        fromDatabase:
-          name: encuentrau-db
-          property: connectionString
-      # FRONTEND_ORIGIN no es necesaria en este despliegue: frontend y API
-      # se sirven desde el mismo servicio (mismo origen), así que no hay
-      # petición cross-origin real que proteger con CORS.
+        sync: false
+      # https://<servicio>.onrender.com (la app no arranca sin https://).
+      - key: URL_PUBLICA
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: CORREO_REMITENTE
+        sync: false
+      # FRONTEND_ORIGIN no es necesaria: frontend y API se sirven desde el
+      # mismo servicio (mismo origen).

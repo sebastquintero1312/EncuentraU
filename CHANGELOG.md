@@ -1,5 +1,17 @@
 # Changelog de EncuentraU
 
+## Preparación del despliegue v2.0 (Supabase + Render + Brevo)
+
+- `render.yaml` reescrito para v2.0: se quita la base de datos de Render
+  (vencía a los 30 días; ahora es Supabase), la migración ya no corre al
+  arrancar (el usuario de la app no puede crear tablas), Gunicorn con 1
+  proceso y 4 hilos (límites de peticiones exactos) y variables de v2.0
+  (`NUM_PROXIES`, Brevo, `URL_PUBLICA`), con los secretos en `sync: false`.
+- Se elimina el `Procfile` (de v1.0; Render usa `render.yaml`).
+- Nuevo `database/scripts/crear_usuario_app_supabase.sql` para crear
+  `encuentrau_app` en Supabase.
+- Estado: IMPLEMENTADO. No verificado en Render todavía.
+
 ## EncuentraU v2.0 — PostgreSQL, tres roles, reclamación segura y rediseño
 
 Cambio mayor (rompe compatibilidad con v1.0: nuevos roles, nueva API, nuevo
