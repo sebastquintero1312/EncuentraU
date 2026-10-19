@@ -151,7 +151,7 @@ Cada uno vuelve a comprobar en la base de datos que quien actúa es un **encarga
 - **Exportación CSV** para Excel (`/api/admin/exportar/*.csv`), sin datos personales y protegida contra inyección de fórmulas (`test_exportar_csv_sin_datos_personales_y_seguro_para_excel`).
 - **Herramientas de análisis** (Power BI, Looker Studio, Excel): `database/scripts/crear_rol_lector.sql` crea `encuentrau_lector`, que solo puede leer las vistas de estadísticas. *(IMPLEMENTADO, no ejecutado.)*
 - **Correo**: Brevo por API HTTPS (`backend/app/services/correo_service.py`). *(IMPLEMENTADO: en desarrollo y pruebas se usan los modos "consola" y "memoria".)*
-- **CI en la nube**: `.github/workflows/pruebas.yml` levanta PostgreSQL en GitHub Actions y ejecuta pytest en cada push. *(IMPLEMENTADO, no ejecutado todavía en GitHub.)*
+- **CI en la nube**: `.github/workflows/pruebas.yml` levanta PostgreSQL en GitHub Actions y ejecuta pytest en cada push. *(VERIFICADO: primera ejecución exitosa en `main` el 2026-10-19, https://github.com/sebastquintero1312/EncuentraU/actions/runs/39299522079.)*
 
 ## 13. Ver la base de datos
 

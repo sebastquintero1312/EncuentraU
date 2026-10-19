@@ -13,6 +13,7 @@ URL pública: **https://encuentrau.onrender.com**
 | Cookie de sesión `Secure; HttpOnly; SameSite=Lax` | VERIFICADO | `GET /api/auth/csrf-token`. |
 | Brevo (correos) | VERIFICADO | El correo de verificación de registro llegó a un buzón `@sanmateo.edu.co` y la cuenta quedó verificada. |
 | Primer administrador | VERIFICADO | `flask crear-admin` ejecutado desde el PC contra Supabase. |
+| CI de pruebas en GitHub Actions | VERIFICADO | Suite completa sobre PostgreSQL en `main`: https://github.com/sebastquintero1312/EncuentraU/actions/runs/39299522079 |
 | Secretos de respaldo en GitHub | PENDIENTE | |
 
 - La v1.0 se llegó a desplegar en Render con su PostgreSQL gratuito. Esa base venció (Render borra las bases gratuitas a los 30 días).
