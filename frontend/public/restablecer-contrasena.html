@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="referrer" content="no-referrer">
+  <!-- same-origin (no "no-referrer"): el token del enlace nunca se envía a
+       otros sitios, pero la protección CSRF de Flask-WTF exige el Referer en
+       HTTPS. El JS borra el token de la URL antes de hacer el POST. -->
+  <meta name="referrer" content="same-origin">
   <title>Nueva contraseña · EncuentraU</title>
   <link rel="icon" href="img/logo-sanmateo.png">
   <link rel="stylesheet" href="vendor/fontawesome/css/fontawesome.min.css">

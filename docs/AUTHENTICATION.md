@@ -22,7 +22,7 @@ Código: `backend/app/services/cuentas_service.py`, `auth_service.py`, `controll
 - Se generan con `secrets.token_urlsafe(32)`. En `tokens_usuario` se guarda **solo su hash SHA-256**: una copia robada de la base de datos no permite usar los enlaces (`test_en_la_base_solo_se_guarda_el_hash_del_token`).
 - Cada token tiene un propósito (`verificacion` o `recuperacion`) y no sirve para el otro.
 - Emitir un token nuevo invalida los pendientes del mismo propósito; usarlo lo marca como usado.
-- Las páginas que reciben un token lo borran de la barra de direcciones apenas lo leen (`history.replaceState`) y usan `<meta name="referrer" content="no-referrer">`.
+- Las páginas que reciben un token lo borran de la barra de direcciones apenas lo leen (`history.replaceState`) y usan `<meta name="referrer" content="same-origin">`: el Referer nunca sale hacia otros sitios, pero sí llega a nuestro servidor, porque la protección CSRF de Flask-WTF lo exige en HTTPS (con `no-referrer` la verificación fallaba en producción con "The referrer header is missing").
 
 ## 4. Recuperación de contraseña
 

@@ -14,6 +14,10 @@
   con la base en Supabase. Verificado: migración, permisos mínimos, RLS,
   `/health`, HTTPS/HSTS/CSP y cookie `Secure`. Pendiente: correo real de
   Brevo, primer administrador y secretos de respaldo (ver docs/DEPLOYMENT.md).
+- Corrección: la verificación de correo y el restablecimiento de contraseña
+  fallaban en producción ("The referrer header is missing"): las páginas
+  usaban `no-referrer` y Flask-WTF exige el Referer en HTTPS. Ahora usan
+  `same-origin` (el token se borra de la URL antes del POST).
 - `User-Agent` explícito en las peticiones a Brevo (Cloudflare bloqueó el de
   Python por defecto en una prueba).
 
